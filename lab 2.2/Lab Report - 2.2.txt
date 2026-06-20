@@ -1,0 +1,31 @@
+Lab 2.2: Exploring Secure vs. Insecure Protocols
+CompTIA SEC+ Hands-On Lab, Domain 2: Architecture & Design
+Prepared by: Jared Lomeli
+Date: June 19, 2026
+1. Objective
+The purpose of this lab was to directly compare an insecure, plaintext protocol (Telnet) against its encrypted replacement (SSH) by connecting to the same target with both. SEC+ tests protocol security extensively, and this exercise was designed to make the practical difference between plaintext and encrypted remote access visible rather than just theoretical.
+2. Lab Environment
+This lab ran inside the Host-Only network (192.168.56.0/24), with Kali Linux acting as the client for both connection attempts.
+Kali Linux: the client, used to open both the Telnet and SSH sessions.
+Metasploitable 2: the server at 192.168.56.101, which runs both a Telnet service (port 23) and an SSH service (port 22) using the same msfadmin account.
+3. Step-by-Step Procedure
+I opened a terminal in Kali and connected to Metasploitable using Telnet, which sends all session data, including login credentials, in plain text.
+I logged in with the msfadmin credentials, ran a few basic commands to confirm the session worked, and then exited the Telnet session.
+I then connected to the same target using SSH instead, which encrypts the entire session.
+When prompted, I accepted the host key fingerprint warning, since this was the first connection to this host from this Kali installation.
+I logged in again with the same msfadmin credentials, ran the same basic commands, and exited the SSH session.
+I compared the two sessions side by side, focusing on what each protocol would expose to anyone capturing the network traffic.
+4. Commands & Actions Performed
+telnet 192.168.56.101
+This opens a Telnet session to the target. Telnet transmits the entire session, including the username and password typed at login, as unencrypted plain text.
+ssh msfadmin@192.168.56.101
+This opens an SSH session to the same target using the same account. Unlike Telnet, SSH encrypts the entire session from the moment the connection is established, so credentials and commands are never sent in plain text.
+5. Network / Flow Diagram
+                  Host-Only Network (192.168.56.0/24)   +------------+   Telnet (port 23), PLAINTEXT     +------------------+   | Kali Linux  |---------------------------------->| Metasploitable 2  |   |  (client)   |   'msfadmin:msfadmin' visible      | 192.168.56.101    |   |             |   to anyone sniffing the wire       |                  |   |             |                                    |                  |   |             |   SSH (port 22), ENCRYPTED          |                  |   |             |---------------------------------->|                  |   +------------+   only ciphertext visible on wire   +------------------+
+6. Results & Observations
+Both the Telnet and SSH sessions worked identically from a user's point of view, same login prompt, same commands, same output.
+The underlying difference was invisible during normal use but significant from a security standpoint: the Telnet session sent the msfadmin username and password as plain text, while the SSH session encrypted that same data before it ever left Kali.
+Reviewing the secure versus insecure protocol chart reinforced that this same pattern, an old plaintext protocol paired with a modern encrypted replacement, repeats across HTTP/HTTPS, FTP/SFTP, and SNMP v1-v2/SNMP v3.
+7. What I Learned
+This lab drove home a point that SEC+ tests constantly: two protocols can look and behave the same way to a user while having completely different security properties underneath. Telnet and SSH produced an identical experience at the terminal, but only one of them protects credentials and data in transit.
+Connecting that to the protocol comparison chart (HTTP to HTTPS, FTP to SFTP or FTPS, Telnet to SSH, SNMP v1/v2 to SNMP v3, and LDAP to LDAPS) helped me see these not as isolated facts to memorize but as one recurring pattern: legacy plaintext protocols get replaced by versions that add encryption, usually over a different port. The practical lesson is straightforward, plaintext remote access protocols like Telnet should be disabled wherever an encrypted alternative exists.

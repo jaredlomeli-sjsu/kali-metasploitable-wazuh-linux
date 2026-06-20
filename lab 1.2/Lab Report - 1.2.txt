@@ -1,0 +1,30 @@
+Lab 1.2: Vulnerability Scanning with Nikto
+CompTIA SEC+ Hands-On Lab, Domain 1: Threats, Attacks & Vulnerabilities
+Prepared by: Jared Lomeli
+Date: June 19, 2026
+1. Objective
+The purpose of this lab was to perform a vulnerability scan against a web server using Nikto, a tool that checks for known vulnerabilities, misconfigurations, and outdated software on web servers. Metasploitable 2 runs an intentionally outdated Apache installation, which makes it a useful target for practicing this kind of assessment. This exercise builds directly on Domain 1 of the SEC+ exam objectives, specifically the distinction between active reconnaissance and structured vulnerability scanning, and it introduces the idea of mapping scan findings to known vulnerability identifiers such as OSVDB and CVE entries.
+2. Lab Environment
+This lab was conducted inside the isolated VirtualBox Host-Only network (192.168.56.0/24) established earlier in the course, which keeps all lab traffic contained between virtual machines and away from the internet. Two virtual machines were active during this exercise.
+Kali Linux: the scanning workstation, used to run Firefox and Nikto.
+Metasploitable 2: the intentionally vulnerable target, reachable at 192.168.56.101, hosting a basic Apache web server on port 80.
+3. Step-by-Step Procedure
+I confirmed that both the Kali Linux and Metasploitable 2 virtual machines were powered on and connected to the same Host-Only network.
+I opened Firefox inside Kali and navigated to http://192.168.56.101 to confirm that the Metasploitable web server was reachable and responding. A basic webpage loaded, confirming port 80 was open and serving content.
+I opened a terminal in Kali and launched a Nikto scan against the target's web server using its IP address.
+I let the scan run to completion, which took approximately two to three minutes, while Nikto worked through its checks for outdated software versions, missing security headers, and exposed files and directories.
+Once the scan finished, I reviewed the full output line by line to identify every flagged issue.
+4. Commands & Actions Performed
+http://192.168.56.101   (Firefox address bar)
+I entered this address in Firefox to confirm the target's web server was up and reachable before scanning it. A basic webpage loaded successfully, confirming port 80 was open.
+nikto -h 192.168.56.101
+This tells Nikto to run a full vulnerability scan against the host at 192.168.56.101. The -h flag specifies the target host, and Nikto checks the web server for known issues by default.
+5. Network / Flow Diagram
++--------------------+        Host-Only Lab Network        +----------------------------+|     Kali Linux      |        192.168.56.0/24              |      Metasploitable 2       || (Scanner/Analyst)    |------------------------------------>| (Target) 192.168.56.101     ||  Firefox + Nikto     |   HTTP requests, vuln probes        |  Apache web server (port 80)|+--------------------+                                       +----------------------------+        |  http://192.168.56.101    (manual reachability check)        '->nikto -h 192.168.56.101  (automated vulnerability scan)                                  v                  Findings: outdated Apache version, missing security                  headers, exposed files/directories (OSVDB IDs logged)
+6. Results & Observations
+The Nikto scan returned dozens of findings, consistent with Metasploitable's intentionally outdated software stack.
+Several entries were tagged with OSVDB identifiers, which map to specific, known vulnerabilities in the Open Sourced Vulnerability Database.
+The scan flagged an outdated Apache version, several missing security headers (such as X-Frame-Options and X-Content-Type-Options), and exposed files and directories that should not have been publicly accessible.
+7. What I Learned
+This lab clarified the difference between vulnerability scanning and penetration testing for me. Nikto did not attempt to exploit anything, it simply enumerated weaknesses and matched them against known vulnerability databases, which is exactly what the SEC+ objectives describe as vulnerability scanning. Seeing the OSVDB identifiers attached to real findings also helped connect the abstract idea of a CVE (Common Vulnerabilities and Exposures) entry to an actual, hands-on result.
+The biggest takeaway is that a single misconfigured or outdated web server can expose a long list of weaknesses at once, which is why regular vulnerability scanning is treated as a routine, ongoing security control rather than a one-time check.

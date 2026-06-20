@@ -1,0 +1,32 @@
+Lab 2.1: Understanding Network Segmentation
+CompTIA SEC+ Hands-On Lab, Domain 2: Architecture & Design
+Prepared by: Jared Lomeli
+Date: June 19, 2026
+1. Objective
+The purpose of this lab was to understand network segmentation by directly observing how an isolated Host-Only network behaves compared to a network with internet access. SEC+ Domain 2 covers segmentation, DMZ design, and isolation as core architectural security controls, and this exercise turns those abstract concepts into something I could see happen on my own machines.
+2. Lab Environment
+The lab began with both Kali Linux and Metasploitable 2 attached only to the Host-Only network (192.168.56.0/24), which has no route to the internet. Partway through the exercise, a second network adapter was added to Kali only, configured for NAT, giving Kali, but not Metasploitable, a path to the internet.
+Kali Linux: started with one adapter on the Host-Only network, then gained a second NAT adapter for internet access.
+Metasploitable 2: kept on the Host-Only network only, at 192.168.56.101, with no internet-facing adapter at any point.
+3. Step-by-Step Procedure
+I opened a terminal in Kali and checked my own network configuration to confirm which IP address and adapter Kali was using on the Host-Only network.
+I attempted to ping a public internet address from Kali to test whether the Host-Only network had any route out. The ping failed, confirming Kali was fully isolated at that point.
+I shut down the Kali virtual machine, opened its settings, and enabled a second network adapter, configuring it as a NAT adapter so it could reach the internet.
+I started Kali back up and repeated the ping test to the same public address. This time the ping succeeded, confirming the new NAT adapter gave Kali internet access.
+I then pinged Metasploitable's IP address again from Kali to confirm that the original Host-Only connection between the two VMs still worked even after adding the second adapter.
+4. Commands & Actions Performed
+ip addr show
+This lists all network interfaces on the Kali VM along with their assigned IP addresses, which I used to confirm Kali's address on the Host-Only network.
+ping 8.8.8.8
+This sends ICMP echo requests to a well-known public IP address (a public DNS server) to test whether the current network configuration can reach the internet.
+ping 192.168.56.101
+This tests connectivity from Kali to Metasploitable's IP address on the Host-Only network, confirming the lab network itself stayed intact regardless of Kali's internet access.
+5. Network / Flow Diagram
+        Host-Only Network (192.168.56.0/24, isolated)   +----------------------+         +--------------------------+   |   Kali Linux eth0     |<------->|   Metasploitable 2 eth0   |   |   192.168.56.x        |  ping   |   192.168.56.101          |   +----------------------+         +--------------------------+             ^             | eth1 (NAT, added later)             v   +----------------------+   |  Internet (8.8.8.8)   |   <-- reachable from Kali eth1 only   +----------------------+   <-- NOT reachable from Metasploitable
+6. Results & Observations
+With only the Host-Only adapter active, Kali could not reach 8.8.8.8 at all, the ping requests returned no response, confirming the network had no path to the internet.
+After adding the NAT adapter, the same ping to 8.8.8.8 succeeded immediately, showing Kali now had two separate network paths, one isolated and one internet-facing.
+Metasploitable remained completely isolated throughout, it never gained internet access because it was never given a second adapter, which is exactly the intended behavior for a deliberately vulnerable target machine.
+7. What I Learned
+This lab made network segmentation feel concrete rather than theoretical. Watching Kali go from fully isolated to dual-homed, while Metasploitable stayed locked inside the Host-Only network the entire time, illustrated exactly why architects separate sensitive or vulnerable systems from internet-facing ones. It mirrors the logic behind a DMZ: untrusted or high-risk systems sit in their own segment, while only specific, controlled hosts are given a path to less trusted networks.
+The exercise reinforced that segmentation is enforced at the network interface and routing level, not just through firewall rules, and that keeping a vulnerable system off the internet entirely is one of the simplest and most effective isolation controls available.

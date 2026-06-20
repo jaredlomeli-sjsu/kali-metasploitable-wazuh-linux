@@ -1,0 +1,43 @@
+Lab 3.1: Working with Encryption and Hashing
+CompTIA SEC+ Hands-On Lab, Domain 3: Implementation
+Prepared by: Jared Lomeli
+Date: June 19, 2026
+1. Objective
+The purpose of this lab was to practice the two core cryptographic concepts SEC+ tests most heavily under Implementation: hashing for integrity verification and encryption for confidentiality. Using simple text files, this exercise demonstrated how hash values change with even tiny edits to a file, and how symmetric encryption with GPG can protect a message so it is unreadable without the correct passphrase.
+2. Lab Environment
+This lab was performed entirely on the Kali Linux virtual machine using local files and command-line tools (md5sum, sha256sum, and gpg). Metasploitable 2 remained running on the Host-Only network as part of the standard lab setup, but no network connection to it was required for any step in this particular exercise, since all hashing and encryption work happened locally on Kali.
+Kali Linux: the only VM actively used in this lab; all commands ran locally in its terminal.
+Metasploitable 2: left running on the Host-Only network per the standard lab setup, but not targeted by any step in this exercise.
+3. Step-by-Step Procedure
+I created a simple text file in Kali containing a short test sentence.
+I generated an MD5 hash of the file and wrote down the resulting value.
+I generated a SHA-256 hash of the same file and compared its length and format to the MD5 output.
+I made a very small edit to the file, adding a single period at the end of the sentence, and saved it.
+I generated new MD5 and SHA-256 hashes of the edited file and compared both to the values I had written down before the edit.
+I created a second file containing a short secret message and encrypted it symmetrically with GPG using AES-256, choosing a passphrase when prompted.
+I viewed the contents of the resulting encrypted file directly to confirm it was unreadable without decryption.
+I decrypted the file using GPG and my passphrase and confirmed the original message was recovered exactly.
+4. Commands & Actions Performed
+echo "This is my important document" > testfile.txt
+This creates a small text file with a known sentence inside it, giving me a consistent baseline file to hash before and after editing it.
+md5sum testfile.txt
+This calculates the MD5 hash of the file, a 128-bit (32 hex character) fingerprint that should change if even one byte of the file changes.
+sha256sum testfile.txt
+This calculates the SHA-256 hash of the same file, a 256-bit (64 hex character) fingerprint considered far stronger and more collision-resistant than MD5.
+echo "This is my important document." > testfile.txt
+This overwrites the file with an almost identical sentence, adding only a single period, so I could test how sensitive each hashing algorithm is to small changes.
+gpg --symmetric --cipher-algo AES256 secret.txt
+This encrypts secret.txt using symmetric AES-256 encryption, protected by a passphrase I chose at the prompt, producing an encrypted file named secret.txt.gpg.
+cat secret.txt.gpg
+This prints the raw contents of the encrypted file to the terminal, showing garbled binary data instead of the original readable message.
+gpg --decrypt secret.txt.gpg
+This decrypts secret.txt.gpg using the passphrase I set earlier, recovering and displaying the original plaintext message.
+5. Network / Flow Diagram
+  Local operations on Kali Linux (no Metasploitable traffic involved)  testfile.txt  -->  [ MD5 ]      -->  32-char hash  (hash A)  testfile.txt  -->  [ SHA-256 ]  -->  64-char hash  (hash B)        |        v  (edit: add one '.')  testfile.txt' -->  [ MD5 ]      -->  32-char hash, totally different from A  testfile.txt' -->  [ SHA-256 ]  -->  64-char hash, totally different from B  secret.txt --> [ GPG AES-256 encrypt + passphrase ] --> secret.txt.gpg (unreadable)  secret.txt.gpg --> [ GPG decrypt + passphrase ] --> original message recovered
+6. Results & Observations
+Changing the test file by a single character, just adding one period, produced a completely different MD5 and SHA-256 hash with no resemblance to the original values, which is the avalanche effect in action.
+The MD5 hash was a 32-character hexadecimal string, while the SHA-256 hash was a 64-character hexadecimal string, visibly confirming the longer, stronger output of SHA-256.
+The GPG-encrypted file was completely unreadable when viewed directly, but decrypted back to the exact original message once the correct passphrase was supplied.
+7. What I Learned
+This lab made the distinction between hashing and encryption concrete instead of just definitional. Hashing is one-way and used to verify that a file has not changed, which I confirmed by watching a single added period scramble the entire hash output. Encryption is two-way and used for confidentiality, which I confirmed by encrypting and then successfully decrypting the same secret message with GPG.
+SEC+ expects test-takers to know that MD5 is considered broken and should not be relied on for security-sensitive integrity checks, while SHA-256 is the current accepted standard, and that AES-256 remains the gold standard for symmetric encryption. Doing this by hand, rather than just reading about it, made it much easier to keep these facts straight: hashing protects integrity, encryption protects confidentiality, and the strength of the algorithm chosen for each purpose matters.
