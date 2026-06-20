@@ -1,0 +1,1287 @@
+================================================================================
+  CompTIA SEC+ HANDS-ON LAB GUIDE
+  Virtual Lab Setup & Practice Exercises
+  Created: June 4, 2026
+  Tailored for: Complete Beginner | Windows 11 Host | 7.3 GB RAM
+================================================================================
+
+TABLE OF CONTENTS
+-----------------
+  PART 1 — Installing VirtualBox
+  PART 2 — Downloading the VMs
+  PART 3 — Setting Up Kali Linux (Attacker VM)
+  PART 4 — Setting Up Metasploitable 2 (Target VM)
+  PART 5 — Configuring the Network (Host-Only)
+  PART 6 — Lab Exercises by SEC+ Domain
+    - Domain 1: Threats, Attacks & Vulnerabilities
+    - Domain 2: Architecture & Design
+    - Domain 3: Implementation
+    - Domain 4: Operations & Incident Response
+    - Domain 5: Governance, Risk & Compliance
+  PART 7 — Tips, Troubleshooting & Resources
+  PART 8 — Wazuh SIEM Lab (Bonus)
+    - Lab 6.1: Detecting a Brute Force Attack with Wazuh
+    - Lab 6.2: File Integrity Monitoring (FIM)
+    - Lab 6.3: Exploring the Wazuh Dashboard
+
+================================================================================
+PART 1 — INSTALLING VIRTUALBOX
+================================================================================
+
+WHAT IS VIRTUALBOX?
+-------------------
+VirtualBox is free software made by Oracle that lets you run an entire operating
+system inside a window on your current computer. Each simulated computer is
+called a "Virtual Machine" or VM. Think of it like running a computer inside
+your computer.
+
+STEP 1.1 — Download VirtualBox
+--------------------------------
+1. Open your web browser and go to:
+   https://www.virtualbox.org/wiki/Downloads
+
+2. Under "VirtualBox platform packages", click:
+   "Windows hosts"
+   This will download a file named something like: VirtualBox-7.x.x-Win.exe
+
+3. On the same page, also download the "Extension Pack":
+   Under "VirtualBox Extension Pack", click "All supported platforms"
+   This file will be named: Oracle_VirtualBox_Extension_Pack-7.x.x.vbox-extpack
+   (The Extension Pack adds USB support and better performance — you'll need it.)
+
+STEP 1.2 — Install VirtualBox
+-------------------------------
+1. Go to your Downloads folder and double-click the VirtualBox installer (.exe)
+2. Click "Next" on the Welcome screen
+3. Leave all default settings and keep clicking "Next"
+4. When asked about network interfaces, click "Yes" (your internet may briefly
+   disconnect for a few seconds — this is normal)
+5. Click "Install"
+6. If Windows asks "Do you want to allow this app to make changes?" click "Yes"
+7. Click "Finish" when complete — VirtualBox will open automatically
+
+STEP 1.3 — Install the Extension Pack
+---------------------------------------
+1. In VirtualBox, go to the top menu: File > Tools > Extension Pack Manager
+   (In newer versions: File > Preferences > Extensions)
+2. Click the small box icon with a green arrow (Add)
+3. Navigate to your Downloads folder and select the Extension Pack file
+   (the .vbox-extpack file you downloaded)
+4. Click "Install" and agree to the license terms
+5. Click "OK" when done
+
+You now have VirtualBox fully installed.
+
+================================================================================
+PART 2 — DOWNLOADING THE VMs
+================================================================================
+
+You will use two VMs for this lab:
+
+  VM 1: Kali Linux    — Your security/attacker machine (has all tools pre-installed)
+  VM 2: Metasploitable 2 — An intentionally broken/vulnerable Linux server (your target)
+
+WHY THESE TWO?
+--------------
+Kali Linux is the industry-standard OS used by security professionals and
+penetration testers. It comes pre-loaded with hundreds of security tools.
+
+Metasploitable 2 is a virtual machine created specifically for practicing
+attacks and security testing. It is designed to be broken into — it is NOT
+something you'd ever put on a real network.
+
+STEP 2.1 — Download Kali Linux (Pre-built VirtualBox Image)
+------------------------------------------------------------
+Using the pre-built image saves you from doing a full install.
+
+1. Go to: https://www.kali.org/get-kali/#kali-virtual-machines
+2. Click the VirtualBox icon/button (looks like a blue VirtualBox logo)
+3. Download the file — it will be a .7z file, around 3-4 GB
+   Example filename: kali-linux-2024.x-virtualbox-amd64.7z
+
+4. You need a program to unzip .7z files. Download 7-Zip (free):
+   https://www.7-zip.org/
+   Install it, then right-click the Kali .7z file > 7-Zip > Extract Here
+   This will produce a folder containing a .vbox file and a .vdi file.
+
+STEP 2.2 — Download Metasploitable 2
+--------------------------------------
+1. Go to: https://sourceforge.net/projects/metasploitable/
+2. Click the green "Download" button
+3. This downloads a .zip file (~800 MB)
+4. Right-click the .zip file > Extract All
+5. You will get a folder containing several files including a .vmdk file
+   (the virtual hard disk)
+
+================================================================================
+PART 3 — SETTING UP KALI LINUX (ATTACKER VM)
+================================================================================
+
+STEP 3.1 — Import Kali Linux into VirtualBox
+---------------------------------------------
+Since Kali came as a pre-built image, you just need to add it:
+
+1. Open VirtualBox
+2. In the top menu, click: Machine > Add
+3. Navigate to the folder where you extracted the Kali .7z file
+4. Select the file ending in .vbox and click "Open"
+5. Kali Linux will now appear in your VM list on the left side
+
+STEP 3.2 — Configure Kali VM Settings
+----------------------------------------
+Right-click "Kali Linux" in the list > Settings
+
+Under SYSTEM:
+  - Motherboard tab:
+      Base Memory: Set to 2048 MB (2 GB)
+      (Do NOT go higher — you need RAM left over for Windows to run)
+  - Processor tab:
+      Processors: Set to 2
+
+Under DISPLAY:
+  - Video Memory: Set to 128 MB
+  - Check "Enable 3D Acceleration" if available
+
+Under NETWORK:
+  - Adapter 1: Change "Attached to" dropdown to "Host-Only Adapter"
+  - In the "Name" dropdown, select "VirtualBox Host-Only Ethernet Adapter"
+  (We'll set this up in Part 5 if it doesn't exist yet)
+
+Click "OK" to save.
+
+STEP 3.3 — First Boot of Kali
+-------------------------------
+1. Click on "Kali Linux" in the left list to select it
+2. Click the green "Start" arrow at the top
+3. Kali will boot — this may take 1-2 minutes the first time
+4. At the login screen:
+     Username: kali
+     Password: kali
+5. You should see a desktop environment load up
+
+IMPORTANT: Kali is now your working machine for all lab exercises.
+Keep this VM window open while doing labs.
+
+================================================================================
+PART 4 — SETTING UP METASPLOITABLE 2 (TARGET VM)
+================================================================================
+
+Metasploitable 2 did not come as a .vbox file, so you need to create a new VM
+and attach its disk.
+
+STEP 4.1 — Create a New VM for Metasploitable
+-----------------------------------------------
+1. In VirtualBox, click the blue "New" button at the top
+2. Fill in the details:
+     Name: Metasploitable2
+     Folder: Leave as default
+     ISO Image: Leave empty / skip
+     Type: Linux
+     Version: Ubuntu (64-bit)   [Metasploitable is based on Ubuntu]
+3. Click "Next"
+
+4. Memory settings:
+     RAM: 1024 MB (1 GB) — this VM doesn't need much
+     Processors: 1
+5. Click "Next"
+
+6. Hard Disk:
+     Select: "Use an existing virtual hard disk file"
+     Click the small folder icon to the right
+     Click "Add" and navigate to the Metasploitable2 folder you extracted
+     Select the file ending in .vmdk
+     Click "Choose"
+7. Click "Next" then "Finish"
+
+STEP 4.2 — Configure Metasploitable Network
+---------------------------------------------
+1. Right-click "Metasploitable2" in the list > Settings
+2. Go to Network > Adapter 1
+3. Change "Attached to" to: Host-Only Adapter
+4. Make sure the Name matches the same Host-Only adapter used for Kali
+5. Click "OK"
+
+STEP 4.3 — Start Metasploitable 2
+------------------------------------
+1. Select "Metasploitable2" and click "Start"
+2. It will boot to a text login screen (no graphical interface — that's normal)
+3. Log in with:
+     Username: msfadmin
+     Password: msfadmin
+4. Type: ifconfig
+   Look for the line starting with "eth0" — note the IP address shown
+   It will look something like: 192.168.56.101
+   WRITE THIS DOWN — you will use it in every lab exercise
+
+DO NOT connect Metasploitable to the internet. It is intentionally vulnerable
+and would be compromised almost immediately if internet-facing.
+
+================================================================================
+PART 5 — CONFIGURING THE HOST-ONLY NETWORK
+================================================================================
+
+A "Host-Only" network creates a private network between your VMs and your
+Windows host. The VMs can talk to each other but NOT to the internet.
+This is the safest setup for a security lab.
+
+STEP 5.1 — Create the Host-Only Network (if it doesn't exist)
+---------------------------------------------------------------
+1. In VirtualBox, go to: File > Tools > Network Manager
+   (Older versions: File > Host Network Manager)
+2. If you see an entry like "VirtualBox Host-Only Ethernet Adapter" already,
+   you're good — skip to Step 5.2
+3. If the list is empty, click "Create" (the + icon)
+   A new adapter will appear, named "vboxnet0" or similar
+4. Click on it and check settings:
+     IPv4 Address: 192.168.56.1
+     IPv4 Network Mask: 255.255.255.0
+     DHCP Server: Enabled (check the DHCP Server tab and enable it)
+5. Click "Apply" and close
+
+STEP 5.2 — Verify Connectivity Between VMs
+--------------------------------------------
+1. Start BOTH Kali and Metasploitable VMs
+2. In Kali, open a Terminal (right-click desktop > Terminal, or find it in apps)
+3. Type the following command (replace with Metasploitable's actual IP):
+     ping 192.168.56.101
+
+4. You should see replies like:
+     64 bytes from 192.168.56.101: icmp_seq=1 ttl=64 time=0.5 ms
+
+5. Press Ctrl+C to stop the ping
+
+If you get replies, your network is working correctly. You are ready for labs.
+
+If you get "Destination Host Unreachable":
+  - Make sure both VMs are set to the same Host-Only adapter
+  - Make sure both VMs are running
+  - Try restarting the VMs
+
+================================================================================
+PART 6 — LAB EXERCISES BY SEC+ DOMAIN
+================================================================================
+
+Before starting any lab, always:
+  - Have Kali Linux running (your attacker/analyst machine)
+  - Know Metasploitable's IP address (from Step 4.3)
+  - Open a Terminal in Kali
+
+--------------------------------------------------------------------------------
+DOMAIN 1: THREATS, ATTACKS & VULNERABILITIES
+--------------------------------------------------------------------------------
+
+SEC+ Topics Covered: Malware types, attack types, vulnerability scanning,
+social engineering concepts, network attacks.
+
+--- LAB 1.1: NETWORK SCANNING WITH NMAP ---
+
+WHAT YOU'LL LEARN:
+  Reconnaissance is the first phase of any attack. Nmap is the most widely
+  used tool for discovering what devices are on a network and what services
+  they're running. SEC+ covers this under "Reconnaissance" and "Footprinting."
+
+STEPS:
+  1. In Kali, open a Terminal
+
+  2. Scan for all devices on the network:
+       nmap 192.168.56.0/24
+     This scans every possible address in your lab network.
+     You should see your Metasploitable VM appear with its IP.
+
+  3. Do a more detailed scan on Metasploitable:
+       nmap -sV -O 192.168.56.101
+     Flags explained:
+       -sV  = detect what software/version is running on each port
+       -O   = try to detect the operating system
+
+  4. Do a full port scan:
+       nmap -p- 192.168.56.101
+     This scans all 65,535 ports. It takes a few minutes.
+     You will see a LOT of open ports — Metasploitable is very vulnerable.
+
+WHAT TO OBSERVE:
+  - Note the list of open ports (21, 22, 23, 25, 80, 139, 445, etc.)
+  - Each open port is a potential attack surface
+  - Services like Telnet (port 23) and FTP (port 21) are old and insecure
+
+SEC+ CONNECTION:
+  - This demonstrates "Active Reconnaissance" techniques
+  - Understanding open ports ties to "Attack Surface" concepts
+  - The output shows why disabling unused services is a security best practice
+
+--- LAB 1.2: VULNERABILITY SCANNING WITH NIKTO ---
+
+WHAT YOU'LL LEARN:
+  Metasploitable runs a web server. Nikto scans web servers for known
+  vulnerabilities, misconfigurations, and outdated software.
+
+STEPS:
+  1. First, verify the web server is running. In Kali open Firefox:
+       Go to: http://192.168.56.101
+       You should see a basic webpage
+
+  2. In Terminal, run:
+       nikto -h 192.168.56.101
+
+  3. Wait for the scan to complete (~2-3 minutes)
+
+WHAT TO OBSERVE:
+  - Nikto will report dozens of vulnerabilities
+  - Look for entries marked "OSVDB" — these are known vulnerability IDs
+  - You'll see things like outdated Apache version, missing security headers,
+    exposed files and directories
+
+SEC+ CONNECTION:
+  - Demonstrates "Vulnerability Scanning" (a key SEC+ topic)
+  - Shows the difference between vulnerability scanning vs. penetration testing
+  - Relates to CVE (Common Vulnerabilities and Exposures) concepts
+
+--- LAB 1.3: PASSWORD ATTACK WITH HYDRA ---
+
+WHAT YOU'LL LEARN:
+  Hydra is a tool that automates login attempts (brute force / dictionary
+  attacks). SEC+ covers password attacks extensively.
+
+STEPS:
+  1. Metasploitable has an FTP service running on port 21
+     Let's try to brute-force login using a common password list
+
+  2. In Terminal, run:
+       hydra -l msfadmin -P /usr/share/wordlists/rockyou.txt.gz 192.168.56.101 ftp
+
+     Flags explained:
+       -l msfadmin  = try only the username "msfadmin"
+       -P           = use this file as the password list
+       rockyou.txt  = famous leaked password list with 14 million passwords
+
+  3. Hydra will try passwords until it finds the correct one ("msfadmin")
+     It will display: [21][ftp] host: 192.168.56.101  login: msfadmin  password: msfadmin
+
+WHAT TO OBSERVE:
+  - Even a simple, predictable password like "msfadmin" gets cracked
+  - Notice how quickly it works against weak passwords
+
+SEC+ CONNECTION:
+  - Demonstrates "Brute Force" and "Dictionary Attack" concepts
+  - Shows why password complexity and lockout policies matter
+  - Relates to "Account Policies" in the Implementation domain
+
+--------------------------------------------------------------------------------
+DOMAIN 2: ARCHITECTURE & DESIGN
+--------------------------------------------------------------------------------
+
+SEC+ Topics Covered: Network segmentation, DMZ, VPNs, cloud concepts,
+zero trust, secure network design.
+
+--- LAB 2.1: UNDERSTANDING NETWORK SEGMENTATION ---
+
+WHAT YOU'LL LEARN:
+  Your Host-Only network IS a form of network segmentation. This lab helps
+  you visualize how segmentation works and why it matters.
+
+STEPS:
+  1. In Kali Terminal, check your own IP address:
+       ip addr show
+
+  2. Try to access a website from Kali:
+       ping 8.8.8.8
+     You should get "Network unreachable" or no response.
+     This is because Kali is ONLY on the Host-Only network.
+
+  3. Now add a second network adapter to Kali that connects to NAT (internet):
+     - Shut down Kali: (power button > shut down)
+     - Go to Kali VM Settings > Network > Adapter 2
+     - Enable it, set to "NAT"
+     - Start Kali again
+
+  4. Now test connectivity again:
+       ping 8.8.8.8
+     You should now get replies — Kali can reach the internet
+
+  5. Try to ping Metasploitable's IP — it should still work too
+     Kali now has TWO network interfaces: one for internet, one for the lab
+
+WHAT TO OBSERVE:
+  - Metasploitable remains isolated — it cannot reach the internet
+  - Kali can reach both networks because it has two adapters
+  - This simulates how a security analyst's workstation might be configured
+
+SEC+ CONNECTION:
+  - Demonstrates network segmentation and isolation
+  - Simulates a DMZ concept (Metasploitable = untrusted internal zone)
+  - Shows why sensitive systems should be isolated from internet-facing networks
+
+--- LAB 2.2: EXPLORING SECURE VS. INSECURE PROTOCOLS ---
+
+WHAT YOU'LL LEARN:
+  Some protocols send data in plain text (insecure). Others encrypt data
+  (secure). SEC+ heavily tests this distinction.
+
+STEPS:
+  1. Telnet sends everything in plain text. Connect to Metasploitable via Telnet:
+       telnet 192.168.56.101
+     Login with: msfadmin / msfadmin
+     Type a few commands, then type "exit"
+
+  2. SSH encrypts all traffic. Connect via SSH:
+       ssh msfadmin@192.168.56.101
+     Accept the fingerprint warning (type "yes")
+     Login with the same credentials
+     Type a few commands, then type "exit"
+
+WHAT TO OBSERVE:
+  - Both connections work the same way from a user perspective
+  - But Telnet is sending your password and commands in plain text
+  - SSH encrypts everything — even if someone captures the traffic, they
+    can't read your commands or password
+
+INSECURE vs SECURE PROTOCOL CHART (study this for SEC+):
+  Insecure      | Secure Replacement  | Port Change
+  --------------|---------------------|------------------
+  HTTP (80)     | HTTPS (443)         | Adds TLS/SSL
+  FTP (21)      | SFTP / FTPS         | Adds SSH or TLS
+  Telnet (23)   | SSH (22)            | Full encryption
+  SNMP v1/v2    | SNMP v3             | Adds authentication
+  LDAP (389)    | LDAPS (636)         | Adds TLS
+
+SEC+ CONNECTION:
+  - Protocol comparison is one of the most tested SEC+ topics
+  - Understanding port numbers and their secure alternatives is critical
+  - Relates to "Cryptographic Protocols" in the Implementation domain
+
+--------------------------------------------------------------------------------
+DOMAIN 3: IMPLEMENTATION
+--------------------------------------------------------------------------------
+
+SEC+ Topics Covered: PKI, certificates, cryptography, firewalls, IDS/IPS,
+wireless security, identity and access management.
+
+--- LAB 3.1: WORKING WITH ENCRYPTION AND HASHING ---
+
+WHAT YOU'LL LEARN:
+  Hashing is a one-way function used to verify integrity. Encryption is
+  two-way and used for confidentiality. SEC+ tests both extensively.
+
+STEPS:
+  1. In Kali Terminal, create a test file:
+       echo "This is my important document" > testfile.txt
+
+  2. Generate an MD5 hash of the file:
+       md5sum testfile.txt
+     Write down the output hash.
+
+  3. Generate a SHA-256 hash:
+       sha256sum testfile.txt
+     Note how much longer and more complex the SHA-256 hash is.
+
+  4. Modify the file very slightly:
+       echo "This is my important document." > testfile.txt
+     (Added a period at the end)
+
+  5. Run MD5 and SHA-256 again:
+       md5sum testfile.txt
+       sha256sum testfile.txt
+     Compare the new hashes to your written-down ones.
+
+WHAT TO OBSERVE:
+  - Even a tiny change (adding one period) completely changes the hash
+  - This is called the "Avalanche Effect"
+  - MD5 produces 128-bit hash (32 hex characters)
+  - SHA-256 produces 256-bit hash (64 hex characters) — much stronger
+
+  6. Now try encrypting a file with GPG:
+       echo "Secret message" > secret.txt
+       gpg --symmetric --cipher-algo AES256 secret.txt
+     It will ask you to create a passphrase — make one up
+     This creates an encrypted file: secret.txt.gpg
+
+  7. Read the encrypted file:
+       cat secret.txt.gpg
+     You'll see garbled/binary data — completely unreadable
+
+  8. Decrypt it:
+       gpg --decrypt secret.txt.gpg
+     Enter your passphrase — you'll see the original message again
+
+SEC+ CONNECTION:
+  - MD5 is considered broken/weak — SEC+ expects you to know this
+  - SHA-256 is the current standard
+  - AES-256 is the gold standard for symmetric encryption
+  - Understand the difference: hashing = integrity, encryption = confidentiality
+
+--- LAB 3.2: FIREWALL RULES WITH IPTABLES ---
+
+WHAT YOU'LL LEARN:
+  Firewalls control what traffic is allowed in and out. iptables is the
+  firewall tool used on Linux systems.
+
+STEPS (on Kali — simulating hardening a system):
+
+  1. View current firewall rules:
+       sudo iptables -L -n -v
+     It's likely empty (ACCEPT all) right now
+
+  2. Block all incoming ICMP (ping) traffic to Kali:
+       sudo iptables -A INPUT -p icmp --icmp-type echo-request -j DROP
+
+  3. Now go to Metasploitable and try pinging Kali:
+       ping [Kali's IP address]
+     Pings should not get through now!
+
+  4. Verify from Windows host — open Command Prompt and ping Kali's IP
+     It should also be blocked
+
+  5. Remove the rule:
+       sudo iptables -D INPUT -p icmp --icmp-type echo-request -j DROP
+
+  6. Create a rule that only allows SSH (port 22) and blocks everything else:
+       sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+       sudo iptables -A INPUT -p tcp -j DROP
+     (In real life you'd want more sophisticated rules, but this shows the concept)
+
+  7. Clean up when done:
+       sudo iptables -F
+
+WHAT TO OBSERVE:
+  - Firewalls work by matching rules in order — first match wins
+  - You can block by protocol, port, source IP, destination IP
+  - Default deny is more secure than default allow
+
+SEC+ CONNECTION:
+  - Stateful vs stateless firewalls (iptables can do both)
+  - Implicit deny concept
+  - ACL (Access Control List) rules
+  - Relates to Network Access Control topics
+
+--- LAB 3.3: CREATING AND EXAMINING SSL/TLS CERTIFICATES ---
+
+WHAT YOU'LL LEARN:
+  Certificates are fundamental to PKI (Public Key Infrastructure). SEC+ tests
+  certificate components, certificate authorities, and the chain of trust.
+
+STEPS:
+
+  1. Create your own self-signed certificate (simulating a CA):
+       openssl req -x509 -newkey rsa:2048 -keyout mykey.pem -out mycert.pem -days 365 -nodes
+
+     It will ask you questions (Country, State, etc.) — fill them in or press Enter
+     This creates two files:
+       mykey.pem  = your private key (keep this SECRET)
+       mycert.pem = your certificate (this is what you share publicly)
+
+  2. View the certificate details:
+       openssl x509 -in mycert.pem -text -noout
+
+  WHAT TO LOOK FOR in the output:
+    - "Issuer" — who issued the certificate (yourself, in this case)
+    - "Subject" — who the certificate is for
+    - "Validity: Not Before / Not After" — the expiration dates
+    - "Public Key Algorithm" — RSA in this case
+    - "Signature Algorithm" — how the cert was signed
+
+  3. Check a real-world certificate. Open Firefox in Kali and visit any HTTPS site
+     Click the padlock icon in the address bar > More Information > View Certificate
+     Compare what you see to the output of your openssl command
+
+CERTIFICATE TERMINOLOGY TO KNOW FOR SEC+:
+  - CA (Certificate Authority) — trusted entity that issues certificates
+  - Root CA — the top of the trust chain
+  - Intermediate CA — sits between Root CA and end certificates
+  - CSR (Certificate Signing Request) — sent to a CA to get a certificate
+  - Self-signed certificate — signed by yourself, not trusted by browsers
+  - Certificate Revocation List (CRL) — list of revoked/invalid certificates
+  - OCSP — Online Certificate Status Protocol (real-time revocation check)
+
+--------------------------------------------------------------------------------
+DOMAIN 4: OPERATIONS & INCIDENT RESPONSE
+--------------------------------------------------------------------------------
+
+SEC+ Topics Covered: Log analysis, incident response process, forensics
+concepts, SIEM, threat hunting, disaster recovery.
+
+--- LAB 4.1: LOG ANALYSIS ---
+
+WHAT YOU'LL LEARN:
+  Logs are the primary tool for detecting and investigating security incidents.
+  This lab explores what logs look like and how to find suspicious activity.
+
+STEPS:
+
+  1. In Kali, view the authentication log:
+       sudo cat /var/log/auth.log | head -50
+     (Shows the first 50 lines of authentication events)
+
+  2. Filter for failed login attempts:
+       sudo grep "Failed password" /var/log/auth.log
+     If you don't have entries yet, that's okay — do the next step
+
+  3. Generate some failed logins for practice:
+     From Kali, try to SSH to Metasploitable with wrong passwords:
+       ssh wronguser@192.168.56.101
+     Type a wrong password a few times, then Ctrl+C
+
+  4. Now on Metasploitable, check its authentication log:
+       sudo cat /var/log/auth.log | grep "Failed"
+     You should see the failed attempts you just made
+
+  5. Look for a pattern that resembles a brute force attack:
+     Run your Hydra attack from Lab 1.3 again, then check Metasploitable's logs
+     Notice how many entries a brute force attack generates!
+
+WHAT TO OBSERVE:
+  - Each failed login creates a log entry with timestamp, username, source IP
+  - A brute force attack generates hundreds/thousands of entries in seconds
+  - This is what a SIEM (Security Information and Event Management) system
+    looks for to trigger an alert
+
+--- LAB 4.2: INCIDENT RESPONSE SIMULATION ---
+
+WHAT YOU'LL LEARN:
+  Walk through the NIST Incident Response lifecycle using a simulated scenario.
+  SEC+ expects you to know the phases of incident response.
+
+THE NIST INCIDENT RESPONSE LIFECYCLE:
+  1. Preparation     — having tools, plans, and teams ready
+  2. Detection       — identifying that an incident occurred
+  3. Containment     — stopping the spread/damage
+  4. Eradication     — removing the cause
+  5. Recovery        — restoring normal operations
+  6. Lessons Learned — documenting what happened and improving
+
+SCENARIO:
+  You are a SOC analyst. You've received an alert that a server
+  (Metasploitable — 192.168.56.101) may have been compromised.
+
+STEP 1 — DETECTION: Confirm the alert
+  In Kali, run a port scan to see what's running:
+    nmap -sV 192.168.56.101
+
+  Note any services that seem unusual or that weren't there before.
+  Check if there are any unexpected open ports.
+
+STEP 2 — IDENTIFICATION: Gather more information
+  Try connecting to the web server and note what version of Apache is running:
+    curl -I http://192.168.56.101
+  Note the "Server:" header — it reveals Apache version and OS information.
+  (In a real incident, version disclosure is a finding — attackers use this)
+
+STEP 3 — CONTAINMENT: Isolate the affected system
+  In a real scenario, you would isolate the VM from all networks.
+  Simulate this by going to Metasploitable Settings > Network > Disable Adapter 1
+  This cuts off network access.
+
+STEP 4 — ERADICATION: In a real scenario you would:
+  - Remove malware
+  - Close unauthorized accounts
+  - Patch the vulnerabilities that were exploited
+
+STEP 5 — RECOVERY:
+  Re-enable the network adapter (this restores normal operation in your lab)
+
+STEP 6 — DOCUMENT:
+  Write down what you observed — this simulates a post-incident report.
+  Date/Time, What was detected, What was confirmed, Actions taken, Recommendations.
+
+KEY TERMS TO KNOW FOR SEC+:
+  - IOC (Indicator of Compromise) — evidence that an attack occurred
+  - TTPs (Tactics, Techniques, and Procedures) — how attackers operate
+  - SIEM — Security Information and Event Management
+  - SOAR — Security Orchestration, Automation, and Response
+  - Chain of Custody — maintaining evidence integrity for legal proceedings
+
+--- LAB 4.3: CAPTURING AND ANALYZING NETWORK TRAFFIC ---
+
+WHAT YOU'LL LEARN:
+  Wireshark is a network packet capture tool. Analyzing traffic helps you
+  detect suspicious activity and understand what data is being sent.
+
+STEPS:
+  1. In Kali, open Wireshark:
+       Applications menu > Sniffing & Spoofing > Wireshark
+       (Or type: wireshark in Terminal)
+
+  2. Click on the network interface "eth0" to start capturing
+
+  3. While capturing, go to Metasploitable and:
+       telnet 192.168.56.101
+     Log in with msfadmin / msfadmin
+     Type a command: ls
+     Type: exit
+
+  4. Stop the capture in Wireshark (red square button)
+
+  5. In the Wireshark filter bar, type:
+       telnet
+     Press Enter
+
+  6. Click on a Telnet packet, then look in the bottom pane
+
+WHAT TO OBSERVE:
+  - You can READ THE ACTUAL COMMANDS AND PASSWORD in plain text!
+  - Scroll through the packets and you'll see "msfadmin" appear clearly
+  - This is why Telnet is considered insecure
+
+  7. Now repeat the exercise using SSH instead of Telnet
+     In Wireshark filter: ssh
+     Look at the SSH packets — all you see is encrypted gibberish
+
+SEC+ CONNECTION:
+  - Packet analysis / protocol analysis
+  - Understanding why encryption is critical
+  - Man-in-the-Middle (MitM) attack concepts
+  - Demonstrates confidentiality (CIA Triad)
+
+--------------------------------------------------------------------------------
+DOMAIN 5: GOVERNANCE, RISK & COMPLIANCE
+--------------------------------------------------------------------------------
+
+SEC+ Topics Covered: Risk management, policies, compliance frameworks,
+data classification, privacy laws, vulnerability management process.
+
+--- LAB 5.1: RISK ASSESSMENT EXERCISE ---
+
+WHAT YOU'LL LEARN:
+  Risk assessment is foundational to GRC. SEC+ tests risk calculations and
+  terminology heavily. This is a conceptual lab with practical application.
+
+THE RISK FORMULA:
+  Risk = Threat × Vulnerability × Impact
+
+KEY TERMS:
+  - Threat          — something that COULD cause harm (fire, hacker, flood)
+  - Vulnerability   — a WEAKNESS that can be exploited
+  - Risk            — the likelihood and impact of a threat exploiting a vuln
+  - Asset           — what you're protecting (data, servers, reputation)
+  - Impact          — how bad it would be if the threat happened
+  - Likelihood      — how probable is the threat occurring
+
+  - ALE = Annual Loss Expectancy = SLE × ARO
+  - SLE = Single Loss Expectancy (cost of one incident)
+  - ARO = Annual Rate of Occurrence (how often per year)
+
+EXERCISE:
+  Using your Metasploitable VM, identify actual vulnerabilities and calculate risk.
+
+  Asset: Metasploitable web server
+  Data stored: Assume it holds 1,000 customer records worth $100 each = $100,000
+
+  VULNERABILITY 1: Telnet enabled (port 23 open — you found this in Lab 1.1)
+    Threat: Attacker intercepts credentials via Telnet
+    Likelihood: Likely (3/5) — if internet-facing, this is actively exploited
+    Impact: High — full server access, data breach
+    SLE: $100,000 (full data breach)
+    ARO: 0.5 (once every 2 years)
+    ALE = $100,000 × 0.5 = $50,000/year
+
+  VULNERABILITY 2: Outdated Apache version
+    Threat: Web application exploit
+    Likelihood: Moderate (2/5) — requires specific exploit knowledge
+    Impact: High — remote code execution possible
+    SLE: $100,000
+    ARO: 0.25 (once every 4 years)
+    ALE = $100,000 × 0.25 = $25,000/year
+
+  RISK RESPONSE STRATEGIES (know these for SEC+):
+    - Accept   — acknowledge the risk and do nothing (low risk, high cost to fix)
+    - Mitigate — reduce the risk (patch, add controls, change config)
+    - Transfer — move the risk elsewhere (buy insurance, use cloud provider)
+    - Avoid    — stop doing the risky activity entirely
+
+  APPLY TO ABOVE VULNERABILITIES:
+    Telnet: MITIGATE — disable Telnet, enable SSH only (cost: $0, saves $50k/yr)
+    Apache: MITIGATE — patch/update Apache (low effort, high return)
+
+--- LAB 5.2: DATA CLASSIFICATION EXERCISE ---
+
+WHAT YOU'LL LEARN:
+  Data classification determines how data should be handled and protected.
+  SEC+ tests classification levels and their corresponding controls.
+
+COMMON CLASSIFICATION SCHEMES:
+
+  GOVERNMENT / MILITARY:
+    Top Secret > Secret > Confidential > Unclassified
+
+  CORPORATE / COMMERCIAL:
+    Confidential/Proprietary > Private > Sensitive > Public
+
+  HANDS-ON EXERCISE:
+    On Kali, create a simple file structure representing different data classes:
+      mkdir -p ~/DataClassification/{Public,Internal,Confidential,Restricted}
+
+      echo "Marketing brochure content" > ~/DataClassification/Public/brochure.txt
+      echo "Employee phone directory" > ~/DataClassification/Internal/directory.txt
+      echo "Customer SSNs and credit cards" > ~/DataClassification/Confidential/customers.txt
+      echo "Source code for new product" > ~/DataClassification/Restricted/source_code.txt
+
+    Now apply different file permissions to simulate access controls:
+      chmod 644 ~/DataClassification/Public/brochure.txt          (anyone can read)
+      chmod 640 ~/DataClassification/Internal/directory.txt       (owner/group only)
+      chmod 600 ~/DataClassification/Confidential/customers.txt   (owner only)
+      chmod 600 ~/DataClassification/Restricted/source_code.txt   (owner only)
+
+    View the permissions:
+      ls -la ~/DataClassification/Public/
+      ls -la ~/DataClassification/Confidential/
+
+  WHAT TO OBSERVE:
+    - File permissions implement the principle of least privilege
+    - More sensitive data = more restrictive access
+    - Linux permissions: r=read(4), w=write(2), x=execute(1)
+    - 644 = owner: rwx, group: r, others: r
+    - 600 = owner: rw, group: none, others: none
+
+SEC+ CONNECTION:
+  - Data classification drives security policy decisions
+  - Need-to-know principle
+  - Principle of least privilege
+  - Data handling and retention policies
+
+================================================================================
+PART 7 — TIPS, TROUBLESHOOTING & RESOURCES
+================================================================================
+
+GENERAL TIPS
+------------
+  - Save your VM snapshots before each lab so you can restore if something breaks
+    (In VirtualBox: Machine > Take Snapshot — name it "Before Lab X")
+  - You can pause a VM instead of shutting it down if you need to stop temporarily
+  - If a VM is unresponsive, hold the right Ctrl key + Q to force quit it
+  - Use right Ctrl key to release your mouse cursor from inside a VM window
+
+RECOMMENDED STUDY ORDER
+-----------------------
+  Week 1: Part 1-5 (Setup) + Lab 1.1 (Nmap)
+  Week 2: Labs 1.2, 1.3 (Nikto, Hydra) + Lab 2.2 (Protocols)
+  Week 3: Labs 3.1, 3.2 (Encryption, Firewall)
+  Week 4: Labs 3.3, 4.1 (Certificates, Logs)
+  Week 5: Labs 4.2, 4.3 (Incident Response, Wireshark)
+  Week 6: Labs 5.1, 5.2 (Risk Assessment, Classification) + Review
+  Week 7: Part 8 — Wazuh setup + Labs 6.1, 6.2, 6.3 (SIEM, FIM, Dashboard)
+
+COMMON ISSUES
+-------------
+  Problem: VM won't start, shows "VT-x/AMD-V hardware acceleration is not
+           available on your system"
+  Fix: Enable virtualization in BIOS/UEFI.
+    - Restart your computer
+    - Enter BIOS (usually F2, F10, Del, or Esc during startup)
+    - Look for "Intel VT-x", "AMD-V", "Virtualization Technology", or "SVM Mode"
+    - Enable it and save/exit
+
+  Problem: Kali is very slow or laggy
+  Fix: Reduce visual effects in Kali
+    - Right-click desktop > Display Settings > reduce resolution
+    - In VirtualBox Display settings, make sure Guest Additions are installed:
+      Devices menu > Insert Guest Additions CD > follow prompts inside Kali
+
+  Problem: VMs can't ping each other
+  Fix:
+    - Make sure BOTH VMs use the same Host-Only adapter name
+    - Check that VirtualBox DHCP server is enabled for the Host-Only network
+    - Try: sudo dhclient eth0 (on Metasploitable) to request a new IP
+    - Restart both VMs
+
+  Problem: "Permission denied" when running commands in Kali
+  Fix: Add "sudo" before the command, e.g.:
+       sudo nmap 192.168.56.101
+       sudo iptables -L
+
+IMPORTANT SAFETY REMINDERS
+---------------------------
+  - NEVER connect Metasploitable to a real network or the internet
+  - Only use these tools on systems you OWN or have WRITTEN PERMISSION to test
+  - These skills are for defense, understanding attacks, and authorized testing
+  - Unauthorized scanning/attacking of systems is illegal under the CFAA and
+    similar laws in most countries
+
+FREE STUDY RESOURCES
+--------------------
+  Practice Labs (Online):
+    - TryHackMe.com — free and paid guided security labs
+    - HackTheBox.com — intermediate/advanced labs
+    - CyberDefenders.org — blue team/defensive labs
+
+  CompTIA SEC+ Study:
+    - Professor Messer's free SEC+ course: professormesser.com
+    - Jason Dion's SEC+ practice exams (Udemy — very popular)
+    - CompTIA's official study guide
+
+  Tools Documentation:
+    - Nmap: nmap.org/book/
+    - Kali Linux docs: kali.org/docs/
+    - Wireshark: wireshark.org/docs/
+
+  SEC+ Exam Objectives (FREE from CompTIA):
+    - Download from: comptia.org/training/resources/exam-objectives
+    - Use this as your master checklist — if it's on the objectives, it can
+      be on the exam
+
+KEY ACRONYMS QUICK REFERENCE
+-----------------------------
+  AES   — Advanced Encryption Standard
+  ALE   — Annual Loss Expectancy
+  ARO   — Annual Rate of Occurrence
+  CA    — Certificate Authority
+  CIA   — Confidentiality, Integrity, Availability (CIA Triad)
+  CSIRT — Computer Security Incident Response Team
+  CVE   — Common Vulnerabilities and Exposures
+  DAC   — Discretionary Access Control
+  DLP   — Data Loss Prevention
+  DMZ   — Demilitarized Zone
+  FIM   — File Integrity Monitoring
+  GRC   — Governance, Risk, and Compliance
+  IAM   — Identity and Access Management
+  IOC   — Indicator of Compromise
+  IDS   — Intrusion Detection System
+  IPS   — Intrusion Prevention System
+  MAC   — Mandatory Access Control
+  MFA   — Multi-Factor Authentication
+  MTBF  — Mean Time Between Failures
+  MTTR  — Mean Time To Recover/Repair
+  NIST  — National Institute of Standards and Technology
+  OSINT — Open Source Intelligence
+  PKI   — Public Key Infrastructure
+  RBAC  — Role-Based Access Control
+  RTO   — Recovery Time Objective
+  RPO   — Recovery Point Objective
+  SCAP  — Security Content Automation Protocol
+  SIEM  — Security Information and Event Management
+  SLE   — Single Loss Expectancy
+  SOAR  — Security Orchestration, Automation, and Response
+  SOC   — Security Operations Center
+  TTP   — Tactics, Techniques, and Procedures
+  WAF   — Web Application Firewall
+  XSS   — Cross-Site Scripting
+
+================================================================================
+PART 8 — WAZUH SIEM LAB (BONUS)
+================================================================================
+
+WHAT IS WAZUH?
+--------------
+Wazuh is a free, open-source Security Information and Event Management (SIEM)
+and Extended Detection and Response (XDR) platform used in real SOC environments
+worldwide. In this lab you will deploy Wazuh to monitor your Kali VM — and
+watch it detect the same attacks you ran in earlier labs, now from the
+defender's perspective.
+
+This directly covers SEC+ Domain 4 (Operations & Incident Response):
+SIEM, log monitoring, threat detection, FIM, and incident response.
+
+WAZUH ARCHITECTURE FOR THIS LAB:
+  Wazuh Manager  — new Ubuntu Server VM; receives and analyzes security events
+  Wazuh Agent    — installed on Kali; ships logs to the Manager
+  Wazuh Dashboard — web UI for viewing alerts (accessed from Windows host)
+
+RAM WARNING — READ BEFORE STARTING
+------------------------------------
+Your host has 7.3 GB RAM. Running Kali (2 GB) + Metasploitable (1 GB) +
+Wazuh Manager (2 GB) + Windows at the same time is very tight.
+
+RECOMMENDATION: When running Wazuh labs, SUSPEND Metasploitable to free 1 GB.
+  How to suspend: close the VM window > choose "Save the machine state"
+  How to resume:  select the VM and click Start — it resumes instantly
+
+If the computer feels sluggish during Wazuh labs, close browser tabs and other
+apps, or reduce the Wazuh VM's RAM to 1024 MB in its settings.
+
+--------------------------------------------------------------------------------
+STEP 8.1 — DOWNLOAD UBUNTU SERVER (WAZUH MANAGER VM)
+--------------------------------------------------------------------------------
+Wazuh needs a dedicated Linux server. Ubuntu Server 22.04 LTS is recommended —
+it has no desktop/GUI so it uses minimal RAM.
+
+1. Download Ubuntu Server 22.04 LTS:
+   Go to: https://ubuntu.com/download/server
+   Click "Download Ubuntu Server 22.04 LTS"
+   File: ubuntu-22.04.x-live-server-amd64.iso (~1.5 GB)
+
+--------------------------------------------------------------------------------
+STEP 8.2 — CREATE THE WAZUH VM IN VIRTUALBOX
+--------------------------------------------------------------------------------
+1. In VirtualBox, click "New"
+
+2. Fill in the details:
+     Name:      Wazuh-Manager
+     ISO Image: select the Ubuntu Server .iso you just downloaded
+     Check:     "Skip Unattended Installation"
+     Type:      Linux
+     Version:   Ubuntu (64-bit)
+
+3. Memory:
+     RAM:        2048 MB (2 GB) — minimum for Wazuh to run
+     Processors: 2
+
+4. Hard Disk:
+     Create a new virtual hard disk
+     Size: 50 GB (dynamic allocation — will not use 50 GB of real disk space)
+
+5. Click "Finish"
+
+6. Set the network BEFORE first boot:
+   Right-click "Wazuh-Manager" > Settings > Network
+   Adapter 1: Host-Only Adapter (same adapter used by Kali and Metasploitable)
+   Click OK
+
+--------------------------------------------------------------------------------
+STEP 8.3 — INSTALL UBUNTU SERVER
+--------------------------------------------------------------------------------
+1. Start the Wazuh-Manager VM
+2. Select "Try or Install Ubuntu Server" and press Enter
+3. Language: English → press Enter
+4. Installer update: "Continue without updating"
+5. Keyboard layout: leave default → Done
+6. Installation type: "Ubuntu Server" (default) → Done
+7. Network: leave as-is (DHCP assigns an IP automatically) → Done
+8. Proxy: leave blank → Done
+9. Mirror: leave default → Done
+10. Storage: "Use entire disk" → Done → Continue (confirm formatting warning)
+11. Profile setup (fill in):
+      Your name:   wazuh
+      Server name: wazuh-manager
+      Username:    wazuh
+      Password:    wazuh123
+12. Ubuntu Pro: "Skip for now"
+13. SSH: CHECK "Install OpenSSH server" → Done
+14. Featured snaps: none needed → Done
+
+Installation takes 5-10 minutes. When complete, select "Reboot Now".
+
+After reboot, log in with:
+  Username: wazuh
+  Password: wazuh123
+
+Get the VM's IP address (you need this for every step below):
+  ip addr show
+Look for the IP under "enp0s3" or "eth0" — example: 192.168.56.103
+WRITE THIS DOWN.
+
+--------------------------------------------------------------------------------
+STEP 8.4 — INSTALL WAZUH (ALL-IN-ONE INSTALLER)
+--------------------------------------------------------------------------------
+Wazuh provides a single script that installs everything: Manager, Indexer,
+and Dashboard. Run the following commands one at a time on the Wazuh-Manager VM.
+
+1. Update packages:
+     sudo apt-get update && sudo apt-get upgrade -y
+
+2. Download the Wazuh install script:
+     curl -sO https://packages.wazuh.com/4.7/wazuh-install.sh
+
+3. Run the all-in-one installer:
+     sudo bash wazuh-install.sh -a
+   The -a flag installs all components (Manager + Indexer + Dashboard).
+   This takes 10-20 minutes. Let it finish — do not interrupt it.
+
+4. When it finishes, the script prints credentials. Example output:
+     INFO: --- Summary ---
+     INFO: You can access the web interface https://[IP]:443
+       User: admin
+       Password: [auto-generated password]
+   WRITE DOWN THIS PASSWORD — you need it to log into the dashboard.
+
+5. Verify services are running:
+     sudo systemctl status wazuh-manager
+     sudo systemctl status wazuh-indexer
+     sudo systemctl status wazuh-dashboard
+   Each should show "active (running)" in green.
+
+--------------------------------------------------------------------------------
+STEP 8.5 — INSTALL WAZUH AGENT ON KALI
+--------------------------------------------------------------------------------
+The Wazuh agent runs on monitored systems and forwards logs to the Manager.
+Run these commands in Kali Terminal.
+
+1. Add the Wazuh repository:
+     curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | sudo apt-key add -
+     echo "deb https://packages.wazuh.com/4.x/apt/ stable main" | sudo tee /etc/apt/sources.list.d/wazuh.list
+     sudo apt-get update
+
+2. Install the agent:
+     sudo apt-get install wazuh-agent -y
+
+3. Point the agent at your Wazuh Manager:
+     sudo nano /var/ossec/etc/ossec.conf
+
+   Find the <server> section and update the address line:
+     <address>192.168.56.103</address>
+   Replace 192.168.56.103 with the actual IP you noted in Step 8.3.
+
+   Save and exit: Ctrl+O → Enter → Ctrl+X
+
+4. Enable and start the agent:
+     sudo systemctl daemon-reload
+     sudo systemctl enable wazuh-agent
+     sudo systemctl start wazuh-agent
+
+5. Verify it is running:
+     sudo systemctl status wazuh-agent
+   Should show "active (running)"
+
+--------------------------------------------------------------------------------
+STEP 8.6 — ACCESS THE WAZUH DASHBOARD
+--------------------------------------------------------------------------------
+Open a browser on your Windows host (not inside a VM):
+
+1. Go to: https://[WAZUH MANAGER IP]   (e.g., https://192.168.56.103)
+
+2. You will see a "Your connection is not private" warning.
+   This is expected — Wazuh uses a self-signed certificate (just like Lab 3.3).
+   Click "Advanced" → "Proceed" (Chrome) or "Accept the Risk" (Firefox)
+
+3. Log in:
+     Username: admin
+     Password: [password from Step 8.4]
+
+4. The Wazuh Dashboard loads. If Kali connected successfully, you will see
+   "1 Agent" listed under the agent count. You are ready for the labs below.
+
+--------------------------------------------------------------------------------
+LAB 6.1: DETECTING A BRUTE FORCE ATTACK WITH WAZUH
+--------------------------------------------------------------------------------
+
+WHAT YOU'LL LEARN:
+  Wazuh detects brute force attacks by analyzing authentication logs in real
+  time. This lab shows the defender-side view of the Hydra attack you ran
+  in Lab 1.3 — the same event, seen from the SOC analyst's seat.
+
+STEPS:
+  1. In the Wazuh Dashboard, click "Security Events" in the left sidebar.
+     Note the current alert count (baseline).
+
+  2. On Kali, run the Hydra brute force attack from Lab 1.3:
+       hydra -l msfadmin -P test_passwords.txt 192.168.56.102 ftp
+     (Start Metasploitable first if you suspended it)
+
+  3. Return to the Dashboard within 1-2 minutes.
+     You should see a spike in the Security Events graph.
+
+  4. Click "Threat Hunting" in the left sidebar.
+     Filter by: agent.name: kali
+     Or search for rule group: authentication_failed
+
+  5. Review the alerts. Wazuh uses a 0-15 severity scale:
+       0-3  = informational
+       4-6  = low
+       7-11 = medium (authentication failures land here)
+       12-15 = high / attack detected
+
+  6. Click on any individual alert to see its full details:
+     timestamp, raw log line, rule ID, rule description, and source IP.
+
+WHAT TO OBSERVE:
+  - Multiple failed authentication alerts fire within seconds
+  - Wazuh may fire a "Multiple authentication failures" rule on top of the
+    individual failures — this is correlation (the SIEM connecting dots)
+  - You can see the exact same attack from both sides: attacker (Hydra output)
+    and defender (Wazuh dashboard)
+
+SEC+ CONNECTION:
+  - Live SIEM demonstrating real-time threat detection and alert correlation
+  - Indicators of Compromise (IOCs) appearing as they happen
+  - SOC analyst workflow: detect → investigate → respond
+  - Connects directly to Domain 4 SIEM and incident detection concepts
+
+--- LAB 6.2: FILE INTEGRITY MONITORING (FIM) ---
+
+WHAT YOU'LL LEARN:
+  Wazuh's built-in File Integrity Monitoring watches files for unauthorized
+  changes using file hashing — the same concept from Lab 3.1. This maps to
+  a core SEC+ topic: detecting tampering and unauthorized changes.
+
+STEPS:
+  1. On Kali, check what directories Wazuh is already monitoring:
+       sudo grep -A2 "syscheck" /var/ossec/etc/ossec.conf
+     By default it monitors /etc, /usr/bin, /usr/sbin, and similar directories.
+
+  2. Create a test file in a monitored directory:
+       sudo touch /etc/testfile_wazuh.txt
+       echo "original content" | sudo tee /etc/testfile_wazuh.txt
+
+  3. Wait 2-3 minutes for Wazuh to scan and baseline the file.
+
+  4. Modify the file:
+       echo "content was changed!" | sudo tee /etc/testfile_wazuh.txt
+
+  5. In the Wazuh Dashboard, go to:
+       Modules > Integrity Monitoring > Files
+     Look for alerts about testfile_wazuh.txt.
+
+  6. You should see two events:
+       - File added   (when you created it)
+       - File modified (when you changed the content)
+     The alert includes the SHA-256 hash before and after the change.
+
+  7. Clean up:
+       sudo rm /etc/testfile_wazuh.txt
+
+WHAT TO OBSERVE:
+  - Wazuh uses SHA-256 hashing to detect changes — same concept as Lab 3.1
+  - Even a one-character change creates a completely different hash (avalanche
+    effect) and triggers an alert
+  - This is how real systems detect tampered config files or malware drops
+
+SEC+ CONNECTION:
+  - FIM (File Integrity Monitoring) is a direct SEC+ exam topic
+  - Demonstrates Integrity from the CIA Triad in a practical context
+  - Shows how hashing is used for ongoing security monitoring
+  - Relates to change management and unauthorized modification detection
+
+--- LAB 6.3: EXPLORING THE WAZUH DASHBOARD ---
+
+WHAT YOU'LL LEARN:
+  Navigate the SIEM dashboard the way a SOC analyst would. Knowing your way
+  around a SIEM interface is a practical career skill — and it reinforces
+  SEC+ Domain 4 concepts.
+
+SECTIONS TO EXPLORE:
+
+  OVERVIEW (Home)
+    - Graph of security events over time
+    - Top alerts, top agents, severity distribution
+    - This is the first screen a SOC analyst checks at the start of a shift
+
+  SECURITY EVENTS
+    - All raw alerts, filterable by time, agent, rule, and severity
+    - Click any alert to expand it and see the raw log line that triggered it
+
+  INTEGRITY MONITORING
+    - Files modified, added, or deleted on monitored systems
+    - Change history is retained — useful for forensic investigations
+
+  VULNERABILITY DETECTION (may take time to populate)
+    - CVEs detected on your agents automatically
+    - Automated vulnerability scanning built into the SIEM
+
+  SECURITY CONFIGURATION ASSESSMENT (SCA)
+    - Wazuh benchmarks your system against CIS Benchmark security standards
+    - Click on the Kali agent and see which checks pass or fail
+
+  FOR EACH SECTION, ASK YOURSELF:
+    - What threat does this section help detect?
+    - What would I do if I saw a high-severity alert here?
+    - Where does this fit in the NIST Incident Response lifecycle (Lab 4.2)?
+
+SEC+ CONNECTION:
+  - SIEM dashboards are tested directly in Domain 4
+  - Alert triage, log correlation, and threat hunting
+  - SOC analyst tools and workflows
+  - Connects to SOAR, IOC, and TTPs concepts
+
+WAZUH KEY TERMS (STUDY THESE FOR SEC+):
+  Agent    — software on a monitored endpoint that ships logs to the Manager
+  Manager  — central server that receives, stores, and analyzes security events
+  Rule     — a pattern that matches log entries and generates alerts
+  Alert    — a triggered rule; flags a potential security event
+  FIM      — File Integrity Monitoring; detects unauthorized file changes
+  SCA      — Security Configuration Assessment; automated compliance checking
+  XDR      — Extended Detection and Response; broader than SIEM, includes response
+  Indexer  — the search/storage backend for Wazuh event data (based on OpenSearch)
+  Dashboard — the web UI for viewing and querying all Wazuh data
+
+================================================================================
+END OF GUIDE
+Last Updated: June 17, 2026
+Good luck on your SEC+ journey!
+================================================================================
