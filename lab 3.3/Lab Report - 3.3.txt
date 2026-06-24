@@ -1,0 +1,55 @@
+Lab 3.3: Creating and Examining SSL/TLS Certificates
+CompTIA SEC+ Hands-On Lab, Domain 3: Implementation
+Prepared by: Jared Lomeli
+Date: June 21, 2026
+
+1. Objective
+The purpose of this lab was to build a working understanding of Public Key Infrastructure (PKI) by generating a self-signed X.509 certificate and examining its structure firsthand. Certificates are the trust mechanism behind HTTPS, code signing, and countless other security controls, and the Security+ exam expects candidates to recognize certificate components, the role of a Certificate Authority (CA), and the broader chain of trust. Working through certificate creation manually, rather than only reading about it, made the abstract concept of "signing" concrete: a certificate is simply a public key plus identity information, cryptographically signed by an issuer.
+
+2. Lab Environment
+This lab was performed on the Kali Linux VM, using its built-in OpenSSL toolset, with the Metasploitable 2 VM available on the same isolated host-only VirtualBox network (192.168.56.0/24) for the real-world certificate comparison step. No connection to Wazuh was required for this exercise, since certificate generation is a local cryptographic operation rather than an event that produces logs to forward to the SIEM.
+Kali Linux: the only VM actively used; all OpenSSL commands ran locally in its terminal.
+Metasploitable 2: present on the Host-Only network per the standard lab setup but not targeted by any step in this exercise.
+
+3. Step-by-Step Procedure
+I opened a terminal on the Kali VM and used OpenSSL to generate a self-signed certificate, acting as my own miniature Certificate Authority for the purposes of this exercise. The command produced an RSA key pair and immediately wrapped the public half in a self-signed certificate valid for 365 days. I was prompted to fill in identity fields (Country, State, Organization, Common Name, etc.) and supplied reasonable test values for each.
+Once the key and certificate were created, I used OpenSSL again to print the certificate's contents in human-readable form rather than raw DER/PEM bytes, which let me inspect every field that a browser or client would parse.
+Finally, I opened Firefox on the Kali desktop, navigated to a public HTTPS site, and used the padlock icon to view that site's real certificate, comparing its structure field-by-field against the self-signed certificate I had just created.
+
+4. Commands & Actions Performed
+openssl req -x509 -newkey rsa:2048 -keyout mykey.pem -out mycert.pem -days 365 -nodes
+This single command did three things at once: generated a new 2048-bit RSA key pair, built a Certificate Signing Request from it, and immediately self-signed that request (the -x509 flag) into a finished certificate valid for 365 days. The -nodes flag left the private key unencrypted on disk, which is acceptable for a lab but would never be done for a production CA key. The output was two files: mykey.pem (the private key that must stay secret) and mycert.pem (the public certificate meant to be shared).
+
+openssl x509 -in mycert.pem -text -noout
+This command parsed the binary/PEM certificate and printed every field inside it as plain text, including the Issuer, Subject, validity window, public key algorithm, and signature algorithm. The -noout flag suppressed the re-encoded PEM block so only the human-readable text appeared.
+
+Firefox padlock -> View Certificate (on a live HTTPS site)
+Used Firefox's built-in certificate viewer to inspect a real, CA-issued certificate on a public HTTPS site and compare its fields (Issuer, Subject, chain of trust, validity dates) against the self-signed certificate created with OpenSSL.
+
+5. Network / Flow Diagram
+Local operations on Kali Linux:
+
+[openssl req -x509 ...]
+        |
+        v
+mykey.pem (private key -- keep secret)
+mycert.pem (public certificate -- shareable)
+        |
+        v
+[openssl x509 -text -noout] --> human-readable certificate fields
+
+Comparison path:
+[Kali Firefox] --HTTPS handshake--> [Real-world web server]
+        |
+        v
+Padlock -> View Certificate -> CA-issued chain (Root -> Intermediate -> Leaf)
+
+6. Results & Observations
+The openssl x509 output clearly labeled both an Issuer and a Subject field. In my self-signed certificate, both fields were identical, since I was simultaneously the certificate's subject and its own issuer.
+The Validity section showed a Not Before timestamp matching the moment of creation and a Not After timestamp exactly 365 days later.
+The Public Key Algorithm field read rsaEncryption with a 2048-bit modulus, and the Signature Algorithm field showed an RSA-based SHA-256 signature, confirming the certificate had actually been cryptographically signed.
+By contrast, the real HTTPS site's certificate viewed through Firefox showed an Issuer field pointing to a recognized public Certificate Authority rather than to the site itself, and Firefox displayed a full chain: a Root CA, at least one Intermediate CA, and the leaf certificate issued to the site. That chain of trust is exactly why browsers trusted the real site's certificate without a warning, while a browser would reject my self-signed certificate as untrusted by default.
+
+7. What I Learned
+This lab made the difference between "encrypted" and "trusted" tangible. My self-signed certificate provided the same RSA encryption strength as a CA-issued one, but it carried none of the third-party validation that lets a browser trust it automatically -- which is precisely why self-signed certificates trigger browser warnings outside of internal or lab use.
+For the Security+ exam, this lab reinforced the vocabulary around PKI: a Root CA anchors the entire chain of trust; Intermediate CAs sit between the root and end-entity certificates to limit exposure of the root's signing key; a CSR (Certificate Signing Request) is the request an applicant sends to a CA to obtain a signed certificate; and revocation mechanisms like a CRL (Certificate Revocation List) or OCSP (Online Certificate Status Protocol) exist so that a CA can invalidate a certificate before its natural expiration if the private key is compromised. Understanding these relationships, rather than memorizing them as isolated terms, is what the exam's PKI questions are really testing.

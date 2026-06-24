@@ -1,0 +1,65 @@
+Lab 4.2: Incident Response Simulation
+CompTIA SEC+ Hands-On Lab, Domain 4: Operations & Incident Response
+Prepared by: Jared Lomeli
+Date: June 21, 2026
+
+1. Objective
+This lab walked through the NIST incident response lifecycle (Preparation, Detection, Containment, Eradication, Recovery, and Lessons Learned) using a simulated compromise scenario centered on the Metasploitable 2 VM. The Security+ exam expects candidates to know these six phases by name and in order, and to understand what actions belong in each phase. Acting out a simplified version of each phase, rather than just memorizing the list, reinforced both the order of operations and the reasoning behind it -- for example, why containment must happen before eradication.
+
+2. Lab Environment
+The scenario treated the Kali Linux VM as the SOC analyst's workstation and the Metasploitable 2 VM (192.168.56.101) as the server believed to be compromised, both on the shared 192.168.56.0/24 host-only network. The Wazuh VM represents the SIEM that, in a real deployment, would have generated the original alert; in this simulation the "alert" was treated as a given starting condition, and the lab focused on the analyst response that follows.
+Kali Linux: the SOC analyst workstation; all scanning and investigation commands ran here.
+Metasploitable 2: the simulated compromised target at 192.168.56.101.
+
+3. Step-by-Step Procedure
+Starting from the premise that I, as the SOC analyst, had received an alert about a possibly compromised Metasploitable server, I began the Detection phase by running a service version scan against the target from Kali to confirm what was actually running and to look for anything unexpected or unusually old.
+Moving into Identification, I connected to the target's web server and inspected the response headers -- specifically the Server header -- which exposed the exact Apache version and underlying OS, the kind of information disclosure that a real attacker could use for further targeting.
+For Containment, I simulated isolating the affected system by disabling its network adapter in VirtualBox's VM settings, which is the practical lab equivalent of pulling a compromised server off the network.
+I then walked through, without actually performing, the Eradication actions a real incident would require: removing any malware, closing unauthorized accounts, and patching the vulnerabilities that allowed the compromise.
+For Recovery, I re-enabled the network adapter to restore the VM to its normal operating state.
+Finally, for the Lessons Learned / Documentation phase, I wrote down the incident timeline in the format a real post-incident report would use: date and time, what was detected, what was confirmed, actions taken, and recommendations going forward.
+
+4. Commands & Actions Performed
+nmap -sV 192.168.56.101
+Ran a service-version detection scan against the target to support the Detection phase, confirming exactly which services and versions were exposed and flagging anything unexpected compared to a known-good baseline.
+
+curl -I http://192.168.56.101
+Requested only the HTTP headers from the target's web server during the Identification phase. The Server header in the response revealed the Apache version and host OS, illustrating how banner/version disclosure can hand an attacker reconnaissance information for free.
+
+VirtualBox: Metasploitable Settings -> Network -> Adapter 1 -> Disable
+Used VirtualBox's network settings to disable Metasploitable's virtual network adapter, simulating the Containment step of physically or logically isolating a compromised host from the rest of the network without powering it off, which preserves volatile evidence for later forensic review.
+
+VirtualBox: Metasploitable Settings -> Network -> Adapter 1 -> Enable
+Re-enabled the network adapter during the Recovery phase, restoring the VM's normal connectivity once the simulated incident had been "resolved."
+
+5. Network / Flow Diagram
+[Wazuh/SIEM alert] (assumed starting condition)
+        |
+        v
+DETECTION: [Kali] --nmap -sV--> [Metasploitable 192.168.56.101]
+        |
+        v
+IDENTIFICATION: [Kali] --curl -I http://...--> Server header leaks Apache/OS version
+        |
+        v
+CONTAINMENT: [Metasploitable] Adapter 1 DISABLED (isolated from 192.168.56.0/24)
+        |
+        v
+ERADICATION: (walked through conceptually: remove malware, close accounts, patch)
+        |
+        v
+RECOVERY: [Metasploitable] Adapter 1 RE-ENABLED (rejoins network)
+        |
+        v
+LESSONS LEARNED: Written incident report (timeline, findings, actions, recommendations)
+
+6. Results & Observations
+The nmap scan returned a clear list of open ports and service versions on Metasploitable, several of which are deliberately old and vulnerable by design, giving concrete "unusual services" to point to during Detection.
+The curl request's Server header explicitly named the Apache version and the underlying OS, confirming that version disclosure through HTTP headers is a real and easily observed information leak, not just a theoretical risk.
+Disabling the network adapter immediately and visibly cut off the VM's connectivity -- a fast, low-risk way to demonstrate containment in a lab setting without needing to touch firewall rules or switch configuration.
+Writing the final documentation step out explicitly (date/time, what was detected, what was confirmed, actions taken, recommendations) made clear how much structure a real incident report requires compared to an informal description of what happened.
+
+7. What I Learned
+Walking through all six NIST phases in order reinforced why the sequence matters: jumping straight to Eradication without first completing Containment risks letting an active attacker maintain access while evidence is being altered, and skipping Lessons Learned discards the organizational value of the incident entirely.
+This lab also sharpened several Security+ vocabulary terms in context rather than in isolation: an IOC (Indicator of Compromise) is the evidence -- such as an unexpected open port or a leaked server banner -- that something is wrong; TTPs (Tactics, Techniques, and Procedures) describe how an attacker operated and would be informed by what was found during Identification; a SIEM and a SOAR platform are what would have generated the original alert and could automate parts of Containment in a production environment; and Chain of Custody is the documentation discipline that keeps evidence usable if an incident ever needs to support a legal or HR action.
+Treating this as a structured six-phase process, rather than an ad hoc reaction, is exactly the mental model the exam is testing.

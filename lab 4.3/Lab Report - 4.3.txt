@@ -1,0 +1,64 @@
+Lab 4.3: Capturing and Analyzing Network Traffic
+CompTIA SEC+ Hands-On Lab, Domain 4: Operations & Incident Response
+Prepared by: Jared Lomeli
+Date: June 23, 2026
+
+1. Objective
+This lab focused on packet capture and traffic analysis using Wireshark to compare an insecure, plaintext protocol (Telnet) against an encrypted protocol (SSH). The goal was to directly observe how unencrypted protocols expose credentials and session data on the wire, and to contrast that exposure with the protection encryption provides. This exercise builds practical skill in protocol analysis -- a core SEC+ competency -- and reinforces the confidentiality leg of the CIA Triad by showing, rather than simply describing, why protocol selection matters to an organization's security posture.
+
+2. Lab Environment
+The lab was performed across two virtual machines on an isolated, host-only virtual network so that captured traffic would be limited to lab-generated activity.
+Kali Linux: the attacker/analyst workstation running Wireshark to capture and inspect packets on interface eth0.
+Metasploitable 2: the target/victim host at 192.168.56.101, running both a Telnet service (port 23) and an SSH service (port 22) for comparison. No Wazuh component was required for this exercise, since the focus was packet-level analysis rather than log correlation or alerting.
+
+3. Step-by-Step Procedure
+I started by opening Wireshark on the Kali Linux VM from the Applications menu under Sniffing & Spoofing and began a live capture on the eth0 interface, since that is the interface carrying traffic to and from Metasploitable.
+With the capture running, I opened a Telnet session to Metasploitable using telnet 192.168.56.101. I authenticated with the default credentials (msfadmin / msfadmin), ran a simple ls command to generate session traffic, and typed exit to close the session cleanly.
+I stopped the capture immediately afterward using the red square stop button in Wireshark so the buffer would be focused on the relevant traffic.
+To isolate just the Telnet conversation from the rest of the capture, I typed telnet into the Wireshark display filter bar and pressed Enter. I then clicked through the individual Telnet packets and reviewed the contents shown in the lower detail pane, paying particular attention to packets carrying keystroke and login data.
+Finally, I repeated the exercise using SSH instead of Telnet, connecting to the same Metasploitable host. I applied the ssh filter in Wireshark to isolate that traffic and compared what was visible in the packet payloads against what I had just seen with Telnet.
+
+4. Commands & Actions Performed
+wireshark (launched from Applications > Sniffing & Spoofing)
+Launched the Wireshark packet capture and analysis tool from Kali so traffic on the lab network could be observed in real time. Selected interface eth0 and started the capture.
+
+telnet 192.168.56.101
+Opened a Telnet connection to Metasploitable so the login exchange would be captured as real network packets. Authenticated with msfadmin / msfadmin, ran ls, then typed exit to close the session.
+
+Wireshark display filter: telnet
+Filtered the capture down to only Telnet packets so the login and command traffic could be reviewed without unrelated background noise.
+
+ssh msfadmin@192.168.56.101
+Opened an SSH session to the same Metasploitable host using the same account. All session traffic, including credentials, is encrypted by SSH before it leaves Kali.
+
+Wireshark display filter: ssh
+Filtered the second capture down to only SSH packets to provide a direct, like-for-like comparison against the Telnet capture.
+
+5. Network / Flow Diagram
+Host-only lab network (eth0)
+
++----------------+                        +------------------------+
+| Kali Linux     |<==== captured =====>   | Metasploitable 2       |
+| (Wireshark     |      on eth0 by        | 192.168.56.101         |
+|  capturing)    |      Kali              | - Telnet :23           |
++----------------+                        | - SSH :22              |
+                                          +------------------------+
+
+Flow 1 (Telnet):
+Kali --[plaintext: login, password, ls, exit]--> Metasploitable
+Wireshark filter 'telnet' reveals all of it in cleartext
+
+Flow 2 (SSH):
+Kali --[encrypted session traffic]--> Metasploitable
+Wireshark filter 'ssh' shows only encrypted/unreadable payload
+
+6. Results & Observations
+The difference between the two protocols was immediate and unambiguous once the packets were inspected.
+In the Telnet capture, following a TCP stream or simply opening individual packets in the detail pane showed the login prompt, the literal username msfadmin, and the password msfadmin in readable plaintext. The ls command and its output, along with the exit command, were likewise fully visible in the packet bytes. Scrolling through the Telnet packets, the string msfadmin appeared repeatedly and clearly, with no obfuscation of any kind.
+In contrast, the SSH capture filtered with the ssh display filter showed only encrypted, unreadable binary payload in every packet. No usernames, passwords, or command text were recoverable from the packet contents -- only the expected SSH handshake and encrypted application data.
+This confirmed that SSH protects the confidentiality of session contents end to end, while Telnet provides no protection at all. This contrast also illustrates how trivially an attacker positioned on the same network segment, or performing a man-in-the-middle attack, could harvest credentials and session data from Telnet, FTP, HTTP, or any other unencrypted protocol simply by capturing traffic.
+
+7. What I Learned
+This lab made the abstract concept of confidentiality concrete. Reading the phrase "Telnet sends data in cleartext" in a textbook is very different from watching a real password scroll past in a packet capture. That direct observation reinforced why SEC+ places such heavy emphasis on protocol security and on retiring legacy unencrypted protocols (Telnet, FTP, HTTP) in favor of their encrypted replacements (SSH, FTPS/SFTP, HTTPS).
+The exercise also strengthened my understanding of man-in-the-middle attack concepts: anyone with visibility into the traffic path -- whether through ARP spoofing, a compromised switch, or simple network access -- can passively harvest credentials from unencrypted sessions without the victim ever knowing. That risk maps directly to SEC+ objectives on network attacks and on implementing secure protocols as a baseline control.
+Finally, practicing with Wireshark itself builds a transferable skill: packet-level analysis is foundational not just for offensive testing but for defensive monitoring, incident response, and validating that encryption is actually in effect on a given service, rather than just assumed.
