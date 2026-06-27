@@ -317,15 +317,15 @@
     <div class="pills">
         <span class="pill kali"><span class="pill-dot" style="background:var(--blue)"></span>Kali Linux</span>
         <span class="pill meta"><span class="pill-dot" style="background:var(--red)"></span>Metasploitable 2</span>
-        <span class="pill wazuh"><span class="pill-dot" style="background:var(--purple)"></span>Wazuh SIEM — coming soon</span>
+        <span class="pill wazuh"><span class="pill-dot" style="background:var(--purple)"></span>Wazuh SIEM</span>
         <span class="pill secplus">&#9889; SEC+ Ch. 3 &amp; 4</span>
     </div>
     <div class="progress-box">
         <div class="progress-row">
             <span class="progress-label">Lab Completion</span>
-            <span class="progress-count">11 / 16 reports filed</span>
+            <span class="progress-count">14 / 16 reports filed</span>
         </div>
-        <div class="bar-track"><div class="bar-fill"></div></div>
+        <div class="bar-track"><div class="bar-fill" style="width:87.5%"></div></div>
         <div class="legend">
             <span><span class="ld" style="background:var(--green)"></span>Complete</span>
             <span><span class="ld" style="background:var(--blue)"></span>Report on file</span>
@@ -858,29 +858,86 @@ ssh msfadmin@192.168.56.101      # Wireshark filter: ssh</div>
     <div class="grid">
 
         <!-- 5.1 -->
-        <div class="card dim">
+        <div class="card">
             <div class="card-head">
-                <div class="card-top"><span class="lab-no">LAB 5.1</span><span class="badge b-soon">Upcoming</span></div>
+                <div class="card-top"><span class="lab-no">LAB 5.1</span><span class="badge b-done">Complete</span></div>
                 <div class="card-title">Risk Assessment Exercise</div>
             </div>
             <div class="card-body">
-                <p class="obj">Apply the risk formula (Risk = Threat &times; Vulnerability &times; Impact) to real vulnerabilities found on Metasploitable, calculate ALE/SLE/ARO, and practice the four risk response strategies: Accept, Mitigate, Transfer, Avoid.</p>
+                <p class="obj">Apply the risk formula (Risk = Threat &times; Vulnerability &times; Impact) to real Metasploitable vulnerabilities, calculate ALE/SLE/ARO, and practice the four risk response strategies: Accept, Mitigate, Transfer, Avoid.</p>
                 <div class="tools">
-                    <span class="tp">ALE / SLE / ARO</span><span class="tp">risk matrix</span><span class="tp">GRC</span>
+                    <span class="tp">ALE / SLE / ARO</span><span class="tp">risk matrix</span><span class="tp">GRC</span><span class="tp">nmap</span><span class="tp">curl</span>
+                </div>
+            </div>
+            <div class="card-expand">
+                <div class="card-summary" onclick="toggleCard(this)">
+                    <svg class="arr" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4"/></svg>
+                    View Lab Report
+                </div>
+                <div class="dc">
+                    <div>
+                        <div class="ds-label">Key Findings</div>
+                        <div class="ds-body"><ul>
+                            <li>Applied risk formula to two Metasploitable vulnerabilities: open Telnet (port 23) and Apache version disclosure</li>
+                            <li>Telnet ALE = <code>$50,000/yr</code> (SLE $100k &times; ARO 0.5); Apache ALE = <code>$25,000/yr</code> (SLE $100k &times; ARO 0.25)</li>
+                            <li>Telnet carried 2&times; the annualized risk despite identical High impact and SLE — difference was entirely likelihood and frequency</li>
+                            <li>Both resolved to <strong>Mitigate</strong>: Telnet fix is free (disable, enforce SSH); Apache patch is low-effort, high-return</li>
+                        </ul></div>
+                    </div>
+                    <div>
+                        <div class="ds-label">Commands Used (prior lab evidence re-examined)</div>
+                        <div class="cmd">nmap -sV -O 192.168.56.101   # confirmed Telnet port 23 open
+curl -I http://192.168.56.101  # revealed exact Apache version in Server header</div>
+                    </div>
+                    <div>
+                        <div class="ds-label">Learning Outcome</div>
+                        <div class="ds-body">The ALE = SLE &times; ARO calculation became concrete by applying it to vulnerabilities I had personally found rather than textbook numbers. The right risk response depends on fix cost relative to the ALE it removes — in both cases here, Mitigate was obvious because the fix cost was near zero compared to the dollar risk eliminated. Also reinforced the asset/threat/vulnerability/risk distinction the exam tests.</div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- 5.2 -->
-        <div class="card dim">
+        <div class="card">
             <div class="card-head">
-                <div class="card-top"><span class="lab-no">LAB 5.2</span><span class="badge b-soon">Upcoming</span></div>
+                <div class="card-top"><span class="lab-no">LAB 5.2</span><span class="badge b-done">Complete</span></div>
                 <div class="card-title">Data Classification Exercise</div>
             </div>
             <div class="card-body">
-                <p class="obj">Create a tiered file structure representing Public / Internal / Confidential / Restricted data, apply Linux file permissions to simulate least-privilege access controls, and map classification levels to real-world handling requirements.</p>
+                <p class="obj">Create a tiered file structure representing Public / Internal / Confidential / Restricted data, apply Linux file permissions to enforce least-privilege access controls, and map classification levels to real handling requirements.</p>
                 <div class="tools">
                     <span class="tp">chmod</span><span class="tp">ls -la</span><span class="tp">Kali Linux</span><span class="tp">data classification</span>
+                </div>
+            </div>
+            <div class="card-expand">
+                <div class="card-summary" onclick="toggleCard(this)">
+                    <svg class="arr" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4"/></svg>
+                    View Lab Report
+                </div>
+                <div class="dc">
+                    <div>
+                        <div class="ds-label">Key Findings</div>
+                        <div class="ds-body"><ul>
+                            <li>Created four-tier directory structure on Kali: Public, Internal, Confidential, Restricted — each with a representative file</li>
+                            <li><code>chmod 644</code> (Public) down to <code>chmod 600</code> (Confidential/Restricted) — least privilege visible as actual permission bits, not just a definition</li>
+                            <li><code>ls -la</code> confirmed: Public brochure showed <code>-rw-r--r--</code>; Confidential customer file showed <code>-rw-------</code> — group and others access fully stripped</li>
+                            <li>Tied corporate classification tiers (Public, Internal, Confidential, Restricted) directly to enforceable technical controls</li>
+                        </ul></div>
+                    </div>
+                    <div>
+                        <div class="ds-label">Commands Used</div>
+                        <div class="cmd">mkdir -p ~/DataClassification/{Public,Internal,Confidential,Restricted}
+chmod 644 ~/DataClassification/Public/brochure.txt
+chmod 640 ~/DataClassification/Internal/directory.txt
+chmod 600 ~/DataClassification/Confidential/customers.txt
+chmod 600 ~/DataClassification/Restricted/source_code.txt
+ls -la ~/DataClassification/Public/
+ls -la ~/DataClassification/Confidential/</div>
+                    </div>
+                    <div>
+                        <div class="ds-label">Learning Outcome</div>
+                        <div class="ds-body">Data classification only matters if backed by a control that actually enforces it. Applying chmod values to each tier made the need-to-know principle and least privilege concrete: the more sensitive the data, the fewer entities get access. It also clarified how classification decisions are supposed to drive downstream data handling and retention policy — not just exist on paper.</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -900,15 +957,44 @@ ssh msfadmin@192.168.56.101      # Wireshark filter: ssh</div>
     <div class="grid">
 
         <!-- 6.1 -->
-        <div class="card dim">
+        <div class="card">
             <div class="card-head">
-                <div class="card-top"><span class="lab-no">LAB 6.1</span><span class="badge b-soon">Upcoming</span></div>
+                <div class="card-top"><span class="lab-no">LAB 6.1</span><span class="badge b-done">Complete</span></div>
                 <div class="card-title">Brute Force Detection with Wazuh</div>
             </div>
             <div class="card-body">
-                <p class="obj">Configure Wazuh to detect brute force login attempts in real time, generate alerts, and observe how a SIEM correlates repeated failed authentication events into actionable incidents.</p>
+                <p class="obj">Re-run the Lab 1.3 Hydra FTP attack with the Wazuh agent live, then observe the defender's view — Security Events spike, Threat Hunting filters, and SIEM correlation turning individual failed logins into a single actionable alert.</p>
                 <div class="tools">
-                    <span class="tp">Wazuh</span><span class="tp">SIEM</span><span class="tp">Hydra</span><span class="tp">alert rules</span>
+                    <span class="tp">Wazuh</span><span class="tp">SIEM</span><span class="tp">Hydra</span><span class="tp">alert rules</span><span class="tp">Threat Hunting</span>
+                </div>
+            </div>
+            <div class="card-expand">
+                <div class="card-summary" onclick="toggleCard(this)">
+                    <svg class="arr" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4"/></svg>
+                    View Lab Report
+                </div>
+                <div class="dc">
+                    <div>
+                        <div class="ds-label">Key Findings</div>
+                        <div class="ds-body"><ul>
+                            <li>Security Events graph spiked within ~1 minute of launching Hydra — baseline vs. attack was visually obvious immediately</li>
+                            <li>Individual failed-login alerts landed in the medium severity range (7&ndash;11) on Wazuh's 0&ndash;15 scale</li>
+                            <li>Wazuh raised a higher-level <code>Multiple authentication failures</code> correlation alert — the SIEM recognized the pattern, not just the individual events</li>
+                            <li>Clicking into alerts revealed: raw log line, rule ID, rule description, and source IP — same attack, completely different defender-side view vs. Lab 1.3</li>
+                        </ul></div>
+                    </div>
+                    <div>
+                        <div class="ds-label">Commands &amp; Filters Used</div>
+                        <div class="cmd">hydra -l msfadmin -P test_passwords.txt 192.168.56.102 ftp
+
+# Wazuh Threat Hunting filters:
+agent.name: kali
+rule.groups: authentication_failed</div>
+                    </div>
+                    <div>
+                        <div class="ds-label">Learning Outcome</div>
+                        <div class="ds-body">Seeing the same Hydra attack from both the attacker's terminal (Lab 1.3) and the Wazuh Dashboard here made the value of a SIEM concrete: without correlation, dozens of failed-login events are easy to miss; with it, they collapse into one clear, high-priority alert. Also reinforced core SEC+ Domain 4 vocabulary — SIEM, IOC, and the SOC analyst workflow of detect, investigate, and respond — in a hands-on context rather than a study-guide definition.</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1127,7 +1213,7 @@ ssh msfadmin@192.168.56.101      # Wireshark filter: ssh</div>
                 <svg class="tc-arr" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4"/></svg>
                 <div class="ti">&#x1f4ca;</div>
                 <div class="tn">Wazuh SIEM</div>
-                <div class="td">Event monitoring, FIM, alert correlation &mdash; coming soon</div>
+                <div class="td">Event monitoring, FIM, alert correlation &mdash; SIEM detection labs</div>
             </div>
             <div class="tool-detail">
                 <div>
@@ -1136,7 +1222,7 @@ ssh msfadmin@192.168.56.101      # Wireshark filter: ssh</div>
                 </div>
                 <div>
                     <div class="ds-label">Use Case in This Lab</div>
-                    <div class="ds-body">Planned for Bonus Labs 6.1–6.3 to view the same brute-force attacks and file changes from the defender's perspective — real-time alert spikes, FIM change detection using SHA-256, and SIEM dashboard navigation as a SOC analyst would perform at the start of a shift.</div>
+                    <div class="ds-body">Used in Lab 6.1 to detect the same Hydra brute-force attack from Lab 1.3 from the defender's perspective — Security Events spike, Threat Hunting filters, and correlation alerts. Labs 6.2–6.3 (FIM and dashboard exploration) are upcoming.</div>
                 </div>
             </div>
         </div>
@@ -1188,7 +1274,7 @@ ssh msfadmin@192.168.56.101      # Wireshark filter: ssh</div>
     <div class="foot-inner">
         <div>
             <div class="foot-name">Jared Lomeli</div>
-            <div class="foot-ctx">CompTIA SEC+ Hands-On Lab Series &mdash; Domains 1&ndash;4 + Wazuh SIEM Bonus</div>
+            <div class="foot-ctx">CompTIA SEC+ Hands-On Lab Series &mdash; Domains 1&ndash;5 + Wazuh SIEM Bonus</div>
         </div>
         <a class="gh-link" href="https://github.com/jaredlomeli-sjsu/kali-metasploitable-wazuh-linux" target="_blank" rel="noopener">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>

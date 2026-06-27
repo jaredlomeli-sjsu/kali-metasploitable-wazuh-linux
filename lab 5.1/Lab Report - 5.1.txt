@@ -1,0 +1,49 @@
+Lab 5.1: Risk Assessment Exercise
+CompTIA SEC+ Hands-On Lab, Domain 5: Governance, Risk & Compliance
+Prepared by: Jared Lomeli
+Date: June 27, 2026
+1. Objective
+This lab focused on risk assessment, a foundational concept in Governance, Risk, and Compliance (GRC) that SEC+ tests heavily through both terminology and calculation. Rather than installing or running new tools, the exercise applied formal risk analysis directly to vulnerabilities already discovered earlier in the course, converting raw scan findings into the kind of quantitative risk language (SLE, ARO, ALE) that security professionals and auditors use to justify remediation decisions.
+2. Lab Environment
+This was primarily a desk exercise built on evidence already gathered from Kali Linux and Metasploitable 2 over the Host-Only network in earlier labs. No new VM configuration was required.
+Kali Linux: used to re-examine prior scan output; no new tools were run beyond what Lab 1.1 and Lab 4.2 had already produced.
+Metasploitable 2: the target system being assessed; its open Telnet port and Apache version banner served as the two vulnerabilities analyzed in this exercise.
+3. Step-by-Step Procedure
+I reviewed the results of the Lab 1.1 nmap scan, which had shown that Metasploitable was running Telnet on port 23, an old, unencrypted remote access protocol.
+I also reviewed the Lab 4.2 curl banner grab against Metasploitable's web server, which had disclosed the exact Apache version running on the target through the HTTP response headers.
+I treated the Metasploitable web server as the asset under assessment and assigned it a value of $100,000, representing 1,000 customer records valued at $100 each.
+For Vulnerability 1 (Telnet enabled), I rated the likelihood of exploitation as Likely (3 out of 5), since an exposed Telnet service is actively targeted whenever it is internet-facing, and rated the impact as High, since it allows full credential exposure and server access.
+I calculated the Single Loss Expectancy (SLE) for Telnet at $100,000, the full value of the asset in a worst-case breach, and used an Annual Rate of Occurrence (ARO) of 0.5, meaning the event is assumed to happen once every two years. Multiplying SLE by ARO gave an Annual Loss Expectancy (ALE) of $50,000 per year.
+For Vulnerability 2 (outdated Apache version), I rated the likelihood as Moderate (2 out of 5), since exploiting a specific Apache version requires more specialized knowledge than brute-forcing Telnet, but kept the impact rating at High, since a successful exploit could allow remote code execution.
+I used the same $100,000 SLE for the Apache vulnerability and applied a lower ARO of 0.25, once every four years, producing an ALE of $25,000 per year.
+Finally, I matched each vulnerability to one of the four risk response strategies (Accept, Mitigate, Transfer, Avoid) and selected Mitigate for both, since disabling Telnet in favor of SSH costs nothing and patching Apache is a low-effort, high-return fix.
+4. Commands & Actions Performed
+nmap -sV -O 192.168.56.101
+This is the Lab 1.1 command whose output I re-examined here; it confirmed Telnet (port 23) was open on Metasploitable, which became the basis for Vulnerability 1 in this risk calculation.
+curl -I http://192.168.56.101
+This is the Lab 4.2 banner-grab command whose output I re-examined here; its Server header discloses the exact Apache version, which became the basis for Vulnerability 2 in this risk calculation.
+5. Network / Flow Diagram
+   [Kali Linux]                              [Metasploitable 2]
+   192.168.56.x                               192.168.56.101
+        |                                            |
+        |--- nmap -sV -O 192.168.56.101 ------------>|  (Lab 1.1 evidence: Telnet port 23 open)
+        |--- curl -I http://192.168.56.101 --------->|  (Lab 4.2 evidence: Apache version banner)
+        |                                            |
+        v
+  [Risk Assessment Worksheet]
+     Asset: Metasploitable web server, value $100,000
+       Vulnerability 1 (Telnet):  Likelihood 3/5 x Impact High  -> ALE = $50,000/yr
+       Vulnerability 2 (Apache):  Likelihood 2/5 x Impact High  -> ALE = $25,000/yr
+        |
+        v
+  [Risk Response Decision]
+     Telnet -> MITIGATE (disable Telnet, enforce SSH only)
+     Apache -> MITIGATE (patch / update Apache)
+6. Results & Observations
+Calculating ALE for each vulnerability showed that Telnet carried twice the annualized financial risk of the outdated Apache version, $50,000 per year versus $25,000 per year, even though both vulnerabilities were assigned the same High impact rating and the same $100,000 SLE.
+The difference came entirely from the likelihood and frequency assumptions: Telnet was rated more likely to be exploited (3/5, ARO 0.5) than the Apache version issue (2/5, ARO 0.25), which is consistent with how trivial it is to detect and abuse an open Telnet port compared to fingerprinting and exploiting a specific Apache version.
+Both vulnerabilities resolved to the same Mitigate response, but for different reasons: Telnet because the fix (disable it, use SSH) is free and immediate, and Apache because patching is low-effort and high-return relative to the risk it removes.
+7. What I Learned
+This exercise made the risk formula, Risk = Threat x Vulnerability x Impact, and the ALE = SLE x ARO calculation concrete by applying them to vulnerabilities I had personally found on Metasploitable rather than to abstract textbook numbers.
+I came away with a clearer sense of how SEC+ expects candidates to reason about risk response: Accept, Mitigate, Transfer, and Avoid are not interchangeable, and the right choice depends on the cost of the fix relative to the ALE it removes. In both cases here, Mitigate was the obvious answer because the cost of the fix was near zero compared to the dollar value of risk it eliminated.
+I also reinforced the distinction between an asset, a threat, a vulnerability, and the resulting risk, since the exercise required treating the Metasploitable web server as the asset, Telnet exposure and the outdated Apache version as separate vulnerabilities, and credential interception or remote code execution as the threats that could act on those vulnerabilities.

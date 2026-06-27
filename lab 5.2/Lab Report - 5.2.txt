@@ -1,0 +1,58 @@
+Lab 5.2: Data Classification Exercise
+CompTIA SEC+ Hands-On Lab, Domain 5: Governance, Risk & Compliance
+Prepared by: Jared Lomeli
+Date: June 27, 2026
+1. Objective
+This lab explored data classification, the practice of sorting data into sensitivity tiers so that handling and protection controls can be matched to how damaging it would be if that data were exposed. SEC+ tests both government/military classification schemes (Top Secret, Secret, Confidential, Unclassified) and corporate schemes (Confidential/Proprietary, Private, Sensitive, Public), along with the access controls that should accompany each tier.
+2. Lab Environment
+This lab was performed entirely on the Kali Linux virtual machine using local files and standard Linux file permission commands (mkdir, chmod, ls). Metasploitable 2 remained running on the Host-Only network per the standard lab setup but was not targeted by any step in this exercise.
+Kali Linux: the only VM actively used; all directories, files, and permission changes were created locally.
+Metasploitable 2: left running on the Host-Only network per the standard lab setup, but not involved in this exercise.
+3. Step-by-Step Procedure
+I created a directory structure on Kali representing four data classification tiers in a corporate scheme: Public, Internal, Confidential, and Restricted.
+I placed one representative file in each tier, with the content of each file chosen to match the sensitivity of that tier, from a marketing brochure at the Public level up to source code and customer financial data at the Confidential and Restricted levels.
+I applied Linux file permissions to each file to model an access control appropriate to its classification, using the most permissive setting for the Public file and the most restrictive owner-only setting for the Confidential and Restricted files.
+I listed the permissions on the Public and Confidential directories side by side to visually confirm that the access controls actually differed as intended.
+4. Commands & Actions Performed
+mkdir -p ~/DataClassification/{Public,Internal,Confidential,Restricted}
+Creates all four classification-tier subdirectories in a single command using brace expansion.
+echo "Marketing brochure content" > ~/DataClassification/Public/brochure.txt
+Creates a sample Public-tier file representing low-sensitivity marketing material meant to be freely shared.
+echo "Employee phone directory" > ~/DataClassification/Internal/directory.txt
+Creates a sample Internal-tier file representing data intended only for employees, not the general public.
+echo "Customer SSNs and credit cards" > ~/DataClassification/Confidential/customers.txt
+Creates a sample Confidential-tier file representing regulated personal and financial data that requires strong protection.
+echo "Source code for new product" > ~/DataClassification/Restricted/source_code.txt
+Creates a sample Restricted-tier file representing proprietary intellectual property with the highest sensitivity in this scheme.
+chmod 644 ~/DataClassification/Public/brochure.txt
+Sets the Public file to owner read/write, group read, and others read, since this content is meant to be freely viewable.
+chmod 640 ~/DataClassification/Internal/directory.txt
+Sets the Internal file to owner read/write and group read only, with no access for others, restricting it to employees.
+chmod 600 ~/DataClassification/Confidential/customers.txt
+Sets the Confidential file to owner read/write only, removing all group and other access entirely.
+chmod 600 ~/DataClassification/Restricted/source_code.txt
+Sets the Restricted file to the same owner-only access as Confidential, reflecting its equally high sensitivity.
+ls -la ~/DataClassification/Public/
+Lists the Public directory's permissions to confirm the relaxed, widely readable access level was applied correctly.
+ls -la ~/DataClassification/Confidential/
+Lists the Confidential directory's permissions to confirm the restrictive owner-only access was applied correctly.
+5. Network / Flow Diagram
+        DATA CLASSIFICATION HIERARCHY (Kali local filesystem)
+
+  [Public]        chmod 644  -> owner rw, group r, others r    (least restrictive)
+     |
+  [Internal]      chmod 640  -> owner rw, group r, others none
+     |
+  [Confidential]  chmod 600  -> owner rw, group none, others none
+     |
+  [Restricted]    chmod 600  -> owner rw, group none, others none  (most restrictive)
+
+  Increasing data sensitivity  ------------------------------>  Decreasing access granted
+6. Results & Observations
+The ls -la output for the Public directory showed -rw-r--r-- on brochure.txt, confirming that the owner, group, and others could all read the file, matching the open nature of marketing content.
+The ls -la output for the Confidential directory showed -rw------- on customers.txt, confirming that only the file's owner had any access at all, with group and other permissions completely stripped.
+Comparing the two side by side made the principle of least privilege visible as actual permission bits rather than just a definition: the more sensitive the data, the fewer entities were granted access to it.
+7. What I Learned
+This exercise tied data classification directly to enforceable technical controls instead of leaving it as an abstract policy label. Knowing that data is Confidential only matters if it is backed by a control, in this case a restrictive chmod setting, that actually prevents unauthorized access.
+It also reinforced the need-to-know principle and the principle of least privilege, both heavily tested on SEC+: access should be granted based on what a user must do their job, and the default should be the most restrictive setting that still allows legitimate use.
+Finally, mapping a corporate classification scheme (Public, Internal, Confidential, Restricted) onto real file permissions made it easier to remember how classification decisions are supposed to drive downstream data handling and retention policy, rather than existing only on paper.
